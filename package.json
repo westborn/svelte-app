@@ -4,7 +4,9 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public"
+    "start": "sirv public",
+    "fix-up": "node -e \"const fs = require('fs');const fp='public/build/bundle.js.html';const d=fs.readFileSync(fp);fs.writeFileSync(fp, '<script>\\n' + d + '</script>');\"",
+    "push": "npm run build && npm run fix-up && clasp push"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.0",

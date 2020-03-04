@@ -1,4 +1,18 @@
 <script>
+  import { onMount } from 'svelte'
+
+  async function stall(stallTime = 3000) {
+    await new Promise(resolve => setTimeout(resolve, stallTime))
+  }
+
+  let initialised = false
+
+  onMount(async () => {
+    await stall()
+  })
+
+  const doInit = () => (initialised = true)
+
   let people = [
     { first: 'Hans', last: 'Emil' },
     { first: 'Max', last: 'Mustermann' },
@@ -71,22 +85,29 @@
   }
 </style>
 
-<input placeholder="Name filter" bind:value={prefix} />
-<select bind:value={i} size={5}>
-  {#each filteredPeople as person, i}
-    <option value={i}>{person.last}, {person.first}</option>
-  {/each}
-</select>
+<div class="container">
+  {#if initialised}
+    <input placeholder="Name filter" bind:value={prefix} />
 
-<label>
-  <input bind:value={first} placeholder="first" />
-</label>
-<label>
-  <input bind:value={last} placeholder="last" />
-</label>
+    <select bind:value={i} size={5}>
+      {#each filteredPeople as person, i}
+        <option value={i}>{person.last}, {person.first}</option>
+      {/each}
+    </select>
 
-<div class="buttons">
-  <button on:click={create} disabled={!first || !last}>create</button>
-  <button on:click={update} disabled={!first || !last || !selected}>update</button>
-  <button on:click={remove} disabled={!selected}>delete</button>
+    <label>
+      <input bind:value={first} placeholder="first" />
+    </label>
+    <label>
+      <input bind:value={last} placeholder="last" />
+    </label>
+
+    <div class="buttons">
+      <button on:click={create} disabled={!first || !last}>create</button>
+      <button on:click={update} disabled={!first || !last || !selected}>update</button>
+      <button on:click={remove} disabled={!selected}>delete</button>
+    </div>
+  {:else}
+    <button on:click={doInit} disabled={initialised}>Go</button>
+  {/if}
 </div>

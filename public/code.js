@@ -17,11 +17,11 @@ function doGet(e) {
       break
     }
   }
-  return HtmlService.createTemplateFromFile('index.hml', { startDate: startDate }).evaluate()
+  return HtmlService.createTemplateFromFile('claspIndex.html').evaluate()
 }
 
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getcontent()
+  return HtmlService.createHtmlOutputFromFile(filename).getContent()
 }
 
 function getColByName(colName, sheet) {
