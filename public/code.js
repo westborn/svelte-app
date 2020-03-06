@@ -1,27 +1,69 @@
 function doGet(e) {
-  var url =
-    'https://docs.google.com/spreadsheets/d/1mIYWQJkGhMZmh6pW7VV11ivjftcNloNlxvOgQ6_21yw/edit#gid=0'
-
-  //get the next "Start of Term" date
-  ss = SpreadsheetApp.openByUrl(url)
-  var ws = ss.getSheetByName('Options')
-  var values = getColByName('StartDate', ws)
-
-  // find the next start of term date
-  var today = new Date()
-  var startDate = today
-  for (var i = 0; i < 4; i++) {
-    var val = values[i]
-    if (val[0] > today) {
-      startDate = val[0]
-      break
-    }
-  }
   return HtmlService.createTemplateFromFile('claspIndex.html').evaluate()
 }
 
 function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent()
+}
+
+function codeGetDates() {
+  var url =
+    'https://docs.google.com/spreadsheets/d/1mIYWQJkGhMZmh6pW7VV11ivjftcNloNlxvOgQ6_21yw/edit#gid=0'
+
+  //get the term dates
+  ss = SpreadsheetApp.openByUrl(url)
+  var ws = ss.getSheetByName('Options')
+  // first five rows, 3 columns
+  var values = ws.getRange(1, 1, 5, 3).getValues()
+  obj = getJsonArrayFromData(values)
+  return JSON.stringify(obj)
+}
+
+/************************************************************************
+ *
+ * Gets the last row number based on a selected column range values
+ *
+ * @param {array} range : takes a 2d array of a single column's values
+ *
+ * @returns {number} : the last row number with a value.
+ *
+ */
+
+function getLastRowSpecial(range) {
+  var rowNum = 0
+  var blank = false
+  for (var row = 0; row < range.length; row++) {
+    if (range[row][0] === '' && !blank) {
+      rowNum = row
+      blank = true
+    } else if (range[row][0] !== '') {
+      blank = false
+    }
+  }
+  return rowNum
+}
+
+function getJsonArrayFromData(data) {
+  var obj = {}
+  var result = []
+  var headers = data[0]
+  var cols = headers.length
+  var row = []
+
+  for (var i = 1, l = data.length; i < l; i++) {
+    // get a row to fill the object
+    row = data[i]
+    // clear object
+    obj = {}
+    for (var col = 0; col < cols; col++) {
+      // fill object with new values
+      obj[headers[col]] = row[col]
+    }
+    // add object in a final result
+    result.push(obj)
+  }
+
+  return result
 }
 
 function getColByName(colName, sheet) {

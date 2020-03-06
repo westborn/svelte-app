@@ -1,17 +1,57 @@
 <script>
   import { onMount } from 'svelte'
 
-  async function stall(stallTime = 3000) {
-    await new Promise(resolve => setTimeout(resolve, stallTime))
+  const LOCAL = true
+  const TERMS =
+    '[{"term":1,"startDate":"2020-02-05T13:00:00.000Z","endDate":"2020-04-27T14:00:00.000Z"},{"term":2,"startDate":"2020-04-29T14:00:00.000Z","endDate":"2020-07-20T14:00:00.000Z"},{"term":3,"startDate":"2020-07-22T14:00:00.000Z","endDate":"2020-10-12T13:00:00.000Z"},{"term":4,"startDate":"2020-10-14T13:00:00.000Z","endDate":"2020-11-29T13:00:00.000Z"}]'
+
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ]
+  const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
+  const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
+  const fmtDateShort = dtStr => {
+    // return dd-mmm
+    const [y, m, d] = splitDate(new Date(dtStr))
+    return d + '-' + monthNames[m - 1]
   }
 
   let initialised = false
+
+  async function stall(stallTime = 3000) {
+    await new Promise(resolve => setTimeout(resolve, stallTime))
+  }
 
   onMount(async () => {
     await stall()
   })
 
-  const doInit = () => (initialised = true)
+  const doIninitialise = () => {
+    if (LOCAL) {
+      showDates(TERMS)
+      return
+    } else {
+      google.script.run.withSuccessHandler(showDates).codeGetDates()
+    }
+  }
+
+  const showDates = sheetTerms => {
+    initialised = true
+    terms = JSON.parse(sheetTerms)
+  }
+
+  let terms = []
 
   let people = [
     { first: 'Hans', last: 'Emil' },
@@ -19,15 +59,16 @@
     { first: 'Roman', last: 'Tisch' }
   ]
 
-  let prefix = ''
+  let startDate = ''
+  let filterValue = ''
   let first = ''
   let last = ''
   let i = 0
 
-  $: filteredPeople = prefix
+  $: filteredPeople = filterValue
     ? people.filter(person => {
         const name = `${person.last}, ${person.first}`
-        return name.toLowerCase().match(prefix.toLowerCase())
+        return name.toLowerCase().match(filterValue.toLowerCase())
       })
     : people
 
@@ -87,7 +128,7 @@
 
 <div class="container">
   {#if initialised}
-    <input placeholder="Name filter" bind:value={prefix} />
+    <input placeholder="Name filter" bind:value={filterValue} />
 
     <select bind:value={i} size={5}>
       {#each filteredPeople as person, i}
@@ -107,7 +148,19 @@
       <button on:click={update} disabled={!first || !last || !selected}>update</button>
       <button on:click={remove} disabled={!selected}>delete</button>
     </div>
+    <ul>
+      {#each terms as term}
+        <li>
+          {`Term ${term.term} from ${fmtDateShort(term.startDate)} to ${fmtDateShort(term.endDate)}`}
+        </li>
+      {/each}
+    </ul>
+
+    <pre>{JSON.stringify(terms, null, 2)}</pre>
   {:else}
-    <button on:click={doInit} disabled={initialised}>Go</button>
+    <label>
+      <input bind:value={startDate} placeholder="Date" />
+    </label>
+    <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
 </div>
