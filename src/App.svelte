@@ -3,7 +3,7 @@
 
   const LOCAL = true
   const TERMS =
-    '[{"term":1,"startDate":"2020-02-05T13:00:00.000Z","endDate":"2020-04-27T14:00:00.000Z"},{"term":2,"startDate":"2020-04-29T14:00:00.000Z","endDate":"2020-07-20T14:00:00.000Z"},{"term":3,"startDate":"2020-07-22T14:00:00.000Z","endDate":"2020-10-12T13:00:00.000Z"},{"term":4,"startDate":"2020-10-14T13:00:00.000Z","endDate":"2020-11-29T13:00:00.000Z"}]'
+    '[{"termNumber":1,"startDate":"2020-02-05T13:00:00.000Z","endDate":"2020-04-27T14:00:00.000Z"},{"termNumber":2,"startDate":"2020-04-29T14:00:00.000Z","endDate":"2020-07-20T14:00:00.000Z"},{"termNumber":3,"startDate":"2020-07-22T14:00:00.000Z","endDate":"2020-10-12T13:00:00.000Z"},{"termNumber":4,"startDate":"2020-10-14T13:00:00.000Z","endDate":"2020-11-29T13:00:00.000Z"}]'
 
   const monthNames = [
     'Jan',
@@ -22,6 +22,7 @@
   const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
   const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
   const fmtDateShort = dtStr => {
+    if (typeof dtStr === 'undefined' || dtStr === '') return 'unknown'
     const [y, m, d] = splitDate(new Date(dtStr))
     return d + '-' + monthNames[m - 1]
   }
@@ -41,17 +42,33 @@
     initialised = true
     terms = JSON.parse(sheetTerms)
     const today = new Date()
-    currentTerm = terms.reduce(function(acc, cur) {
-      return new Date(acc.startDate) > today ? acc : cur
+    const currentTerm = terms.reduce(function(acc, cur, j) {
+      return new Date(cur.startDate) > today ? acc : cur
     }, terms[0])
-    selectedTerm = currentTerm.term
+    setTermDates(currentTerm)
+  }
+
+  const setTermDates = term => {
+    termNumber = term.termNumber
+    termStartDate = term.startDate
+    termEndDate = term.endDate
+  }
+  const changeTerm = () => {
+    termNumber += 1
+    if (termNumber > 4) termNumber = 1
+    setTermDates(terms[termNumber - 1])
   }
 
   onMount(async () => {
     await stall()
   })
 
-  let terms = [{ term: 1, startDate: new Date(), endDate: new Date() }]
+  let terms = []
+  let termNumber = 0
+  let termStartDate = ''
+  let termEndDate = ''
+  $: termDates = fmtDateShort(termStartDate) + ' - ' + fmtDateShort(termEndDate)
+
   let people = [
     { first: 'Hans', last: 'Emil' },
     { first: 'Max', last: 'Mustermann' },
@@ -59,23 +76,11 @@
   ]
 
   let initialised = false
-
-  let selectedTerm = 1
-  let listDate = ''
-  let currentTerm = {}
   let filterValue = ''
+
   let first = ''
   let last = ''
   let i = 0
-
-  $: termIndex = selectedTerm - 1
-  $: termDates =
-    fmtDateShort(terms[selectedTerm - 1].startDate) +
-    ' - ' +
-    fmtDateShort(terms[selectedTerm - 1].endDate)
-
-  // $: termDates = selectedTermObj.startDate
-  // $: termDates = selectedTerm ? fmtTermDates(selectedTerm - 1) : 'what'
 
   $: filteredPeople = filterValue
     ? people.filter(person => {
@@ -87,11 +92,6 @@
   $: selected = filteredPeople[i]
 
   $: reset_inputs(selected)
-
-  const changeTerm = () => {
-    selectedTerm += 1
-    if (selectedTerm > 4) selectedTerm = 1
-  }
 
   function create() {
     people = people.concat({ first, last })
@@ -147,7 +147,7 @@
   {#if initialised}
     <h2>
       Displaying Courses for Term
-      <button on:click={changeTerm}>{selectedTerm}</button>
+      <button on:click={changeTerm}>{termNumber}</button>
       {termDates}
     </h2>
 
@@ -174,12 +174,12 @@
     <ul>
       {#each terms as term}
         <li>
-          {`Term ${term.term} from ${fmtDateShort(term.startDate)} to ${fmtDateShort(term.endDate)}`}
+          {`Term ${term.termNumber} from ${fmtDateShort(term.startDate)} to ${fmtDateShort(term.endDate)}`}
         </li>
       {/each}
     </ul>
 
-    <pre>{JSON.stringify(currentTerm, null, 2)}</pre>
+    <pre>{`Term: ${termNumber}, Start: ${termStartDate}, End: ${termEndDate}`}</pre>
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
