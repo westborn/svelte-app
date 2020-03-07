@@ -22,21 +22,13 @@
   const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
   const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
   const fmtDateShort = dtStr => {
-    // return dd-mmm
     const [y, m, d] = splitDate(new Date(dtStr))
     return d + '-' + monthNames[m - 1]
   }
 
-  let initialised = false
-
-  async function stall(stallTime = 3000) {
+  const stall = async (stallTime = 3000) => {
     await new Promise(resolve => setTimeout(resolve, stallTime))
   }
-
-  onMount(async () => {
-    await stall()
-  })
-
   const doIninitialise = () => {
     if (LOCAL) {
       showDates(TERMS)
@@ -45,25 +37,45 @@
       google.script.run.withSuccessHandler(showDates).codeGetDates()
     }
   }
-
   const showDates = sheetTerms => {
     initialised = true
     terms = JSON.parse(sheetTerms)
+    const today = new Date()
+    currentTerm = terms.reduce(function(acc, cur) {
+      return new Date(acc.startDate) > today ? acc : cur
+    }, terms[0])
+    selectedTerm = currentTerm.term
   }
 
-  let terms = []
+  onMount(async () => {
+    await stall()
+  })
 
+  let terms = [{ term: 1, startDate: new Date(), endDate: new Date() }]
   let people = [
     { first: 'Hans', last: 'Emil' },
     { first: 'Max', last: 'Mustermann' },
     { first: 'Roman', last: 'Tisch' }
   ]
 
-  let startDate = ''
+  let initialised = false
+
+  let selectedTerm = 1
+  let listDate = ''
+  let currentTerm = {}
   let filterValue = ''
   let first = ''
   let last = ''
   let i = 0
+
+  $: termIndex = selectedTerm - 1
+  $: termDates =
+    fmtDateShort(terms[selectedTerm - 1].startDate) +
+    ' - ' +
+    fmtDateShort(terms[selectedTerm - 1].endDate)
+
+  // $: termDates = selectedTermObj.startDate
+  // $: termDates = selectedTerm ? fmtTermDates(selectedTerm - 1) : 'what'
 
   $: filteredPeople = filterValue
     ? people.filter(person => {
@@ -75,6 +87,11 @@
   $: selected = filteredPeople[i]
 
   $: reset_inputs(selected)
+
+  const changeTerm = () => {
+    selectedTerm += 1
+    if (selectedTerm > 4) selectedTerm = 1
+  }
 
   function create() {
     people = people.concat({ first, last })
@@ -128,6 +145,12 @@
 
 <div class="container">
   {#if initialised}
+    <h2>
+      Displaying Courses for Term
+      <button on:click={changeTerm}>{selectedTerm}</button>
+      {termDates}
+    </h2>
+
     <input placeholder="Name filter" bind:value={filterValue} />
 
     <select bind:value={i} size={5}>
@@ -156,11 +179,8 @@
       {/each}
     </ul>
 
-    <pre>{JSON.stringify(terms, null, 2)}</pre>
+    <pre>{JSON.stringify(currentTerm, null, 2)}</pre>
   {:else}
-    <label>
-      <input bind:value={startDate} placeholder="Date" />
-    </label>
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
 </div>
