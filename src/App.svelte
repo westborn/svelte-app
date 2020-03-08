@@ -1,9 +1,7 @@
 <script>
   import Terms from './components/Terms.svelte'
+  import RenderList from './components/RenderList.svelte'
   import { EVENTS, TERMS } from './DATA.js'
-
-  console.log(EVENTS)
-  console.log(TERMS)
 
   const LOCAL = true
 
@@ -23,7 +21,6 @@
   }
   const showEvents = sheetEvents => {
     events = JSON.parse(sheetEvents)
-    console.log(events)
   }
 
   // Reactive for term fields
@@ -113,6 +110,8 @@
         termIndex = e.detail.termIndex
       }}
       {terms} />
+
+    <RenderList {events} />
 
     <input placeholder="Name filter" bind:value={filterValue} />
 
