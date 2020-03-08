@@ -1,26 +1,36 @@
 <script>
-  import Terms from './Terms.svelte'
+  import Terms from './components/Terms.svelte'
+  import { EVENTS, TERMS } from './DATA.js'
 
-  const LOCAL = false
-  const TERMS =
-    '[{"termNumber":1,"startDate":"2020-02-05T13:00:00.000Z","endDate":"2020-04-27T14:00:00.000Z"},{"termNumber":2,"startDate":"2020-04-29T14:00:00.000Z","endDate":"2020-07-20T14:00:00.000Z"},{"termNumber":3,"startDate":"2020-07-22T14:00:00.000Z","endDate":"2020-10-12T13:00:00.000Z"},{"termNumber":4,"startDate":"2020-10-14T13:00:00.000Z","endDate":"2020-11-29T13:00:00.000Z"}]'
+  console.log(EVENTS)
+  console.log(TERMS)
+
+  const LOCAL = true
 
   const doIninitialise = () => {
     if (LOCAL) {
       showDates(TERMS)
+      showEvents(EVENTS)
       return
     } else {
       google.script.run.withSuccessHandler(showDates).codeGetDates()
+      google.script.run.withSuccessHandler(showEvents).codeGetEvents()
     }
   }
   const showDates = sheetTerms => {
     initialised = true
     terms = JSON.parse(sheetTerms)
   }
+  const showEvents = sheetEvents => {
+    events = JSON.parse(sheetEvents)
+    console.log(events)
+  }
 
   // Reactive for term fields
   let terms = []
   let termIndex = 0
+
+  let events = []
 
   let people = [
     { first: 'Hans', last: 'Emil' },
@@ -126,6 +136,7 @@
     </div>
 
     <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
+    <pre>{JSON.stringify(events, null, 2)}</pre>
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
