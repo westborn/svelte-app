@@ -1,35 +1,10 @@
 <script>
-  import { onMount } from 'svelte'
+  import Terms from './Terms.svelte'
 
-  const LOCAL = true
+  const LOCAL = false
   const TERMS =
     '[{"termNumber":1,"startDate":"2020-02-05T13:00:00.000Z","endDate":"2020-04-27T14:00:00.000Z"},{"termNumber":2,"startDate":"2020-04-29T14:00:00.000Z","endDate":"2020-07-20T14:00:00.000Z"},{"termNumber":3,"startDate":"2020-07-22T14:00:00.000Z","endDate":"2020-10-12T13:00:00.000Z"},{"termNumber":4,"startDate":"2020-10-14T13:00:00.000Z","endDate":"2020-11-29T13:00:00.000Z"}]'
 
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-  ]
-  const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
-  const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
-  const fmtDateShort = dtStr => {
-    if (typeof dtStr === 'undefined' || dtStr === '') return 'unknown'
-    const [y, m, d] = splitDate(new Date(dtStr))
-    return d + '-' + monthNames[m - 1]
-  }
-
-  const stall = async (stallTime = 3000) => {
-    await new Promise(resolve => setTimeout(resolve, stallTime))
-  }
   const doIninitialise = () => {
     if (LOCAL) {
       showDates(TERMS)
@@ -41,33 +16,11 @@
   const showDates = sheetTerms => {
     initialised = true
     terms = JSON.parse(sheetTerms)
-    const today = new Date()
-    const currentTerm = terms.reduce(function(acc, cur, j) {
-      return new Date(cur.startDate) > today ? acc : cur
-    }, terms[0])
-    setTermDates(currentTerm)
   }
 
-  const setTermDates = term => {
-    termNumber = term.termNumber
-    termStartDate = term.startDate
-    termEndDate = term.endDate
-  }
-  const changeTerm = () => {
-    termNumber += 1
-    if (termNumber > 4) termNumber = 1
-    setTermDates(terms[termNumber - 1])
-  }
-
-  onMount(async () => {
-    await stall()
-  })
-
+  // Reactive for term fields
   let terms = []
-  let termNumber = 0
-  let termStartDate = ''
-  let termEndDate = ''
-  $: termDates = fmtDateShort(termStartDate) + ' - ' + fmtDateShort(termEndDate)
+  let termIndex = 0
 
   let people = [
     { first: 'Hans', last: 'Emil' },
@@ -145,11 +98,11 @@
 
 <div class="container">
   {#if initialised}
-    <h2>
-      Displaying Courses for Term
-      <button on:click={changeTerm}>{termNumber}</button>
-      {termDates}
-    </h2>
+    <Terms
+      on:MESSAGE={e => {
+        termIndex = e.detail.termIndex
+      }}
+      {terms} />
 
     <input placeholder="Name filter" bind:value={filterValue} />
 
@@ -171,15 +124,8 @@
       <button on:click={update} disabled={!first || !last || !selected}>update</button>
       <button on:click={remove} disabled={!selected}>delete</button>
     </div>
-    <ul>
-      {#each terms as term}
-        <li>
-          {`Term ${term.termNumber} from ${fmtDateShort(term.startDate)} to ${fmtDateShort(term.endDate)}`}
-        </li>
-      {/each}
-    </ul>
 
-    <pre>{`Term: ${termNumber}, Start: ${termStartDate}, End: ${termEndDate}`}</pre>
+    <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
