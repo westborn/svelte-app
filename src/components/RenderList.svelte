@@ -7,86 +7,6 @@
 
   var config
 
-  const renderList = (data, settings) => {
-    var result = []
-
-    //Remove cancelled events, sort by date
-    result = data
-      .filter(item => item && item.hasOwnProperty('status') && item.status !== 'cancelled')
-      .sort(comp)
-    //  .reverse()
-
-    var pastCounter = 0
-    var upcomingCounter = 0
-    var pastResult = []
-    var upcomingResult = []
-    var upcomingResultTemp = []
-    var upcomingElem = document.querySelector(settings.upcomingSelector)
-    var pastElem = document.querySelector(settings.pastSelector)
-    var i
-
-    console.log(settings)
-
-    if (settings.pastTopN === -1) {
-      settings.pastTopN = result.length
-    }
-
-    if (settings.upcomingTopN === -1) {
-      settings.upcomingTopN = result.length
-    }
-
-    if (settings.past === false) {
-      settings.pastTopN = 0
-    }
-
-    if (settings.upcoming === false) {
-      settings.upcomingTopN = 0
-    }
-
-    for (i in result) {
-      if (isPast(result[i].end.dateTime || result[i].end.date)) {
-        if (pastCounter < settings.pastTopN) {
-          pastResult.push(result[i])
-          pastCounter++
-        }
-      } else {
-        upcomingResultTemp.push(result[i])
-      }
-    }
-
-    upcomingResultTemp.reverse()
-
-    for (i in upcomingResultTemp) {
-      if (upcomingCounter < settings.upcomingTopN) {
-        upcomingResult.push(upcomingResultTemp[i])
-        upcomingCounter++
-      }
-    }
-    console.log(pastResult)
-    for (i in pastResult) {
-      pastElem.insertAdjacentHTML(
-        'beforeend',
-        transformationList(pastResult[i], settings.itemsTagName, settings.format)
-      )
-    }
-
-    console.log(upcomingResult)
-    for (i in upcomingResult) {
-      upcomingElem.insertAdjacentHTML(
-        'beforeend',
-        transformationList(upcomingResult[i], settings.itemsTagName, settings.format)
-      )
-    }
-
-    if (upcomingElem.firstChild) {
-      upcomingElem.insertAdjacentHTML('beforebegin', settings.upcomingHeading)
-    }
-
-    if (pastElem.firstChild) {
-      pastElem.insertAdjacentHTML('beforebegin', settings.pastHeading)
-    }
-  }
-
   //Gets JSON from Google Calendar and transfroms it into html list items and appends it to past or upcoming events list
   const init = settings => {
     config = settings
@@ -473,6 +393,32 @@
     formattedTime = hour + ':' + minute + period
     return formattedTime
   }
+
+  function renderList(data, settings) {
+    console.log('render function')
+    var result2 = []
+    //Remove cancelled events, sort by date
+    result2 = data
+      .filter(item => item && item.hasOwnProperty('status') && item.status !== 'cancelled')
+      .sort(comp)
+    //  .reverse()
+
+    console.log('result2:')
+    console.log(result2)
+    var result2Elem = document.querySelector(settings.pastSelector)
+    var i
+
+    for (i in result2) {
+      result2Elem.insertAdjacentHTML(
+        'beforeend',
+        transformationList(result2[i], settings.itemsTagName, settings.format)
+      )
+    }
+    if (result2Elem.firstChild) {
+      result2Elem.insertAdjacentHTML('beforebegin', settings.pastHeading)
+    }
+  }
+
   function start() {
     var settings = {
       past: true,
@@ -488,11 +434,11 @@
       upcomingHeading: '<h2>Upcoming events</h2>',
       pastHeading: '<h2>Past events</h2>',
       format: ['*date*', ' - ', '*recurrence*', ' - ', '*summary*'],
-      timeMin: '2019-10-23T10:00:00-07:00',
-      timeMax: '2020-04-31T10:00:00-07:00'
+      timeMin: '2020-01-05T13:00:00.000Z',
+      timeMax: '2020-05-05T13:00:00.000Z'
     }
     //        format: ['*date*', ': ', '*summary*', ' &mdash; ', '*description*', ' in ', '*location*'],
-    console.log('here')
+    console.log('RenderList')
     init(settings)
   }
 

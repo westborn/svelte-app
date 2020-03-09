@@ -12,15 +12,23 @@
       return
     } else {
       google.script.run.withSuccessHandler(showDates).codeGetDates()
-      google.script.run.withSuccessHandler(showEvents).codeGetEvents()
     }
   }
   const showDates = sheetTerms => {
-    initialised = true
     terms = JSON.parse(sheetTerms)
+    var req = {
+      singleEvents: false,
+      timeMin: '2019-10-23T10:00:00-07:00',
+      timeMax: '2020-04-30T10:00:00-07:00'
+    }
+    if (!LOCAL) {
+      google.script.run.withSuccessHandler(showEvents).codeGetEvents(req)
+    }
   }
   const showEvents = sheetEvents => {
+    console.log(sheetEvents)
     events = JSON.parse(sheetEvents)
+    initialised = true
   }
 
   // Reactive for term fields

@@ -19,6 +19,14 @@ function codeGetDates() {
   return JSON.stringify(obj)
 }
 
+function codeGetEvents(req) {
+  //  var calendarId = 'sv3qe35g5jv5lv2n6o10bfi7h0@group.calendar.google.com';
+  var calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Test
+  console.log(req)
+  var events = Calendar.Events.list(calendarId, req).items
+  return JSON.stringify(events)
+}
+
 /************************************************************************
  *
  * Gets the last row number based on a selected column range values
@@ -136,12 +144,4 @@ function findCalendarByName(name) {
   console.log(cal.getDescription())
   console.log(cal.getId())
   console.log(cal.getTimeZone())
-}
-
-function getEvents(req) {
-  //  var calendarId = 'sv3qe35g5jv5lv2n6o10bfi7h0@group.calendar.google.com';
-  var calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Test
-  //  console.log(req)
-  var events = Calendar.Events.list(calendarId, req).items
-  return JSON.stringify(events)
 }
