@@ -123,7 +123,7 @@
 
     <input placeholder="Name filter" bind:value={filterValue} />
 
-    <select bind:value={i} size={5}>
+    <select bind:value={i} size={10}>
       {#each filteredPeople as person, i}
         <option value={i}>{person.last}, {person.first}</option>
       {/each}

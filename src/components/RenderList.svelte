@@ -1,453 +1,71 @@
 <script>
   import { onMount } from 'svelte'
+  import { splitDate, fmtDateShort } from '../utils'
 
   export let events
 
-  const sleep = m => new Promise(r => setTimeout(r, m))
-
-  var config
-
-  //Gets JSON from Google Calendar and transfroms it into html list items and appends it to past or upcoming events list
-  const init = settings => {
-    config = settings
-
-    var req = {}
-
-    if (settings.recurringEvents) {
-      req.singleEvents = 'true'
-      req.orderBy = 'startTime'
+  let calendarEntries = [
+    {
+      summary: '',
+      description: '',
+      location: '',
+      isAllDayEvent: false,
+      startDateTime: '',
+      endDateTime: '',
+      recurrence: [],
+      extendedProperties: {}
     }
+  ]
 
-    if (settings.timeMin) {
-      req.timeMin = settings.timeMin
-    }
-
-    if (settings.timeMax) {
-      req.timeMax = settings.timeMax
-    }
-    console.log(req)
-    renderList(events, config)
+  const getDateUTC = dteStr => {
+    return new Date(dteStr).toISOString()
   }
-
-  const isAllDay = (dateStart, dateEnd) => {
-    var dateEndTemp = subtractOneDay(dateEnd)
-    var isAll = true
-    for (var i = 0; i < 3; i++) {
-      if (dateStart[i] !== dateEndTemp[i]) {
-        isAll = false
-      }
-    }
-    return isAll
-  }
-
-  const isSameDay = (dateStart, dateEnd) => {
-    var isSame = true
-    for (var i = 0; i < 3; i++) {
-      if (dateStart[i] !== dateEnd[i]) {
-        isSame = false
-      }
-    }
-    return isSame
-  }
-
-  //Get all necessary data (dates, location, summary, description) and creates a list item
-  const transformationList = (result, tagName, format) => {
-    var dateStart = getDateInfo(result.start.dateTime || result.start.date),
-      dateEnd = getDateInfo(result.end.dateTime || result.end.date),
-      dayNames = config.dayNames,
-      moreDaysEvent = true,
-      isAllDayEvent = isAllDay(dateStart, dateEnd)
-
-    if (typeof result.end.date !== 'undefined') {
-      dateEnd = subtractOneDay(dateEnd)
-    }
-
-    if (isSameDay(dateStart, dateEnd)) {
-      moreDaysEvent = false
-    }
-
-    var dateFormatted = getFormattedDate(
-        dateStart,
-        dateEnd,
-        dayNames,
-        moreDaysEvent,
-        isAllDayEvent
-      ),
-      output = '<' + tagName + '>',
-      summary = result.summary || '',
-      description = result.description || '',
-      location = result.location || '',
-      recurrence = result.recurrence || '',
-      i
-
-    for (i = 0; i < format.length; i++) {
-      format[i] = format[i].toString()
-
-      if (format[i] === '*summary*') {
-        output = output.concat(`<span class="summary">${summary}</span>`)
-      } else if (format[i] === '*date*') {
-        output = output.concat(`<span class="date">${dateFormatted}</span>`)
-      } else if (format[i] === '*description*') {
-        output = output.concat(`<span class="description">${description}</span>`)
-      } else if (format[i] === '*location*') {
-        output = output.concat(`<span class="location">${location}</span>`)
-        // } else if (format[i] === '*recurrence*' && result.recurrence) {
-        //   eventRule = rrule.RRule.fromString(result.recurrence[0])
-        //   const myOptions = {
-        //     ...eventRule.origOptions,
-        //     dtstart: new Date(result.start.dateTime)
-        //   }
-        //   newRule = new rrule.RRule(myOptions)
-        //   const futureDates = newRule.all().map(dte => formatDateOneDay(getUTCDateInfo(dte), false))
-        //   output = output.concat(
-        //     `<span class="recurrence">${newRule.toText()}</span>
-        //            - (${futureDates.join(', ')})`
-        //   )
-      } else {
-        if (
-          (format[i + 1] === '*location*' && location !== '') ||
-          (format[i + 1] === '*summary*' && summary !== '') ||
-          (format[i + 1] === '*recurrence*' && recurrence !== '') ||
-          (format[i + 1] === '*date*' && dateFormatted !== '') ||
-          (format[i + 1] === '*description*' && description !== '')
-        ) {
-          output = output.concat(format[i])
-        }
-      }
-    }
-
-    return output + '</' + tagName + '>'
-  }
-
-  //Check if date is later then now
-  const isPast = date => {
-    var compareDate = new Date(date),
-      now = new Date()
-    if (now.getTime() > compareDate.getTime()) {
-      return true
-    }
-    return false
-  }
-
-  //Get temp array with information about day in following format: [day number, month number, year, hours, minutes]
-  const getDateInfo = date => {
-    date = new Date(date)
-    return [
-      date.getDate(),
-      date.getMonth(),
-      date.getFullYear(),
-      date.getHours(),
-      date.getMinutes(),
-      0,
-      0
-    ]
-  }
-  //Same as above BUT - use UTC time (RRULE uses UTC throughout)
-  const getUTCDateInfo = date => {
-    date = new Date(date)
-    return [
-      date.getUTCDate(),
-      date.getUTCMonth(),
-      date.getUTCFullYear(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      0,
-      0
-    ]
-  }
-
-  //Get month name according to index
-  const getMonthName = month => {
-    var monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ]
-    return monthNames[month].substring(0, 3)
-  }
-
-  const getDayName = day => {
-    var dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    return dayNames[day].substring(0, 3)
-  }
-
-  const calculateDate = (dateInfo, amount) => {
-    var date = getDateFormatted(dateInfo)
-    date.setTime(date.getTime() + amount)
-    return getDateInfo(date)
-  }
-
-  const getDayNameFormatted = dateFormatted =>
-    getDayName(getDateFormatted(dateFormatted).getDay()) + ' '
-
-  const getDateFormatted = dateInfo =>
-    new Date(dateInfo[2], dateInfo[1], dateInfo[0], dateInfo[3], dateInfo[4] + 0, 0)
-
   //Compare dates
   const comp = (a, b) =>
     new Date(a.start.dateTime || a.start.date).getTime() -
     new Date(b.start.dateTime || b.start.date).getTime()
+  //Get all necessary data (dates, location, summary, description) and creates a data for a list item
+  function extractCalendarDetails(data) {
+    var result = []
 
-  //Add one day
-  const addOneDay = dateInfo => calculateDate(dateInfo, 86400000)
-
-  //Subtract one day
-  const subtractOneDay = dateInfo => calculateDate(dateInfo, -86400000)
-
-  //Subtract one minute
-  const subtractOneMinute = dateInfo => calculateDate(dateInfo, -60000)
-
-  //Transformations for formatting date into human readable format
-  const formatDateSameDay = (dateStart, dateEnd, dayNames, moreDaysEvent, isAllDayEvent) => {
-    var formattedTime = '',
-      dayNameStart = ''
-
-    if (dayNames) {
-      dayNameStart = getDayNameFormatted(dateStart)
-    }
-
-    if (config.sameDayTimes && !moreDaysEvent && !isAllDayEvent) {
-      formattedTime = ' from ' + getFormattedTime(dateStart) + ' - ' + getFormattedTime(dateEnd)
-    }
-
-    //ddd dd-mmm-yyyy time-time
-    return (
-      dayNameStart +
-      dateStart[0] +
-      '-' +
-      getMonthName(dateStart[1]) +
-      '-' +
-      dateStart[2] +
-      formattedTime
-    )
-  }
-
-  const formatDateOneDay = (dateStart, dayNames) => {
-    var dayName = ''
-
-    if (dayNames) {
-      dayName = getDayNameFormatted(dateStart)
-    }
-    //ddd dd-mmm-yyyy
-    // return dayName + dateStart[0] + '-' + getMonthName(dateStart[1]) + '-' + dateStart[2]
-    // dd-mmm
-    return dateStart[0] + '-' + getMonthName(dateStart[1])
-  }
-
-  const formatDateDifferentDay = (dateStart, dateEnd, dayNames) => {
-    var dayNameStart = '',
-      dayNameEnd = ''
-
-    if (dayNames) {
-      dayNameStart = getDayNameFormatted(dateStart)
-      dayNameEnd = getDayNameFormatted(dateEnd)
-    }
-    //ddd dd - ddd dd-mmm-yyyy time-time
-    return (
-      dayNameStart +
-      dateStart[0] +
-      ' - ' +
-      dayNameEnd +
-      dateEnd[0] +
-      '-' +
-      getMonthName(dateStart[1]) +
-      '-' +
-      dateStart[2]
-    )
-  }
-
-  const formatDateDifferentMonth = (dateStart, dateEnd, dayNames) => {
-    var dayNameStart = '',
-      dayNameEnd = ''
-
-    if (dayNames) {
-      dayNameStart = getDayNameFormatted(dateStart)
-      dayNameEnd = getDayNameFormatted(dateEnd)
-    }
-    //ddd dd-mmm - ddd dd-mmm-yyyy time-time
-    return (
-      dayNameStart +
-      dateStart[0] +
-      '-' +
-      getMonthName(dateStart[1]) +
-      ' - ' +
-      dayNameEnd +
-      dateEnd[0] +
-      '-' +
-      getMonthName(dateEnd[1]) +
-      '-' +
-      dateStart[2]
-    )
-  }
-
-  const formatDateDifferentYear = (dateStart, dateEnd, dayNames) => {
-    var dayNameStart = '',
-      dayNameEnd = ''
-
-    if (dayNames) {
-      dayNameStart = getDayNameFormatted(dateStart)
-      dayNameEnd = getDayNameFormatted(dateEnd)
-    }
-    //ddd dd-mmm-yyyy - ddd dd-mmm-yyyy time-time
-    return (
-      dayNameStart +
-      dateStart[0] +
-      '-' +
-      getMonthName(dateStart[1]) +
-      '-' +
-      dateStart[2] +
-      ' - ' +
-      dayNameEnd +
-      dateEnd[0] +
-      '-' +
-      getMonthName(dateEnd[1]) +
-      '-' +
-      dateEnd[2]
-    )
-  }
-
-  //Check differences between dates and format them
-  const getFormattedDate = (dateStart, dateEnd, dayNames, moreDaysEvent, isAllDayEvent) => {
-    var formattedDate = ''
-
-    if (dateStart[0] === dateEnd[0]) {
-      if (dateStart[1] === dateEnd[1]) {
-        if (dateStart[2] === dateEnd[2]) {
-          //month day, year
-          formattedDate = formatDateSameDay(
-            dateStart,
-            dateEnd,
-            dayNames,
-            moreDaysEvent,
-            isAllDayEvent
-          )
-        } else {
-          //month day, year - month day, year
-          formattedDate = formatDateDifferentYear(dateStart, dateEnd, dayNames)
-        }
-      } else {
-        if (dateStart[2] === dateEnd[2]) {
-          //month day - month day, year
-          formattedDate = formatDateDifferentMonth(dateStart, dateEnd, dayNames)
-        } else {
-          //month day, year - month day, year
-          formattedDate = formatDateDifferentYear(dateStart, dateEnd, dayNames)
-        }
-      }
-    } else {
-      if (dateStart[1] === dateEnd[1]) {
-        if (dateStart[2] === dateEnd[2]) {
-          //month day-day, year
-          formattedDate = formatDateDifferentDay(dateStart, dateEnd, dayNames)
-        } else {
-          //month day, year - month day, year
-          formattedDate = formatDateDifferentYear(dateStart, dateEnd, dayNames)
-        }
-      } else {
-        if (dateStart[2] === dateEnd[2]) {
-          //month day - month day, year
-          formattedDate = formatDateDifferentMonth(dateStart, dateEnd, dayNames)
-        } else {
-          //month day, year - month day, year
-          formattedDate = formatDateDifferentYear(dateStart, dateEnd, dayNames)
-        }
-      }
-    }
-
-    return formattedDate
-  }
-
-  const getFormattedTime = date => {
-    var formattedTime = '',
-      period = 'AM',
-      hour = date[3],
-      minute = date[4]
-
-    // Handle afternoon.
-    if (hour >= 12) {
-      period = 'PM'
-
-      if (hour >= 13) {
-        hour -= 12
-      }
-    }
-
-    // Handle midnight.
-    if (hour === 0) {
-      hour = 12
-    }
-
-    // Ensure 2-digit minute value.
-    minute = (minute < 10 ? '0' : '') + minute
-
-    // Format time.
-    formattedTime = hour + ':' + minute + period
-    return formattedTime
-  }
-
-  function renderList(data, settings) {
-    console.log('render function')
-    var result2 = []
     //Remove cancelled events, sort by date
-    result2 = data
+    var resultFiltered = data
       .filter(item => item && item.hasOwnProperty('status') && item.status !== 'cancelled')
       .sort(comp)
-    //  .reverse()
+      .reverse()
 
-    console.log('result2:')
-    console.log(result2)
-    var result2Elem = document.querySelector(settings.pastSelector)
-    var i
+    resultFiltered.forEach(element => {
+      var event = {
+        summary: '',
+        description: '',
+        location: '',
+        isAllDayEvent: false,
+        startDateTime: '',
+        endDateTime: '',
+        recurrence: [],
+        extendedProperties: {}
+      }
+      event.summary = element.summary || ''
+      event.description = element.description || ''
+      event.location = element.location || ''
+      event.recurrence = element.recurrence || ''
+      event.startDateTime = getDateUTC(element.start.dateTime || element.start.date)
+      event.endDateTime = getDateUTC(element.end.dateTime || element.end.date)
 
-    for (i in result2) {
-      result2Elem.insertAdjacentHTML(
-        'beforeend',
-        transformationList(result2[i], settings.itemsTagName, settings.format)
-      )
-    }
-    if (result2Elem.firstChild) {
-      result2Elem.insertAdjacentHTML('beforebegin', settings.pastHeading)
-    }
-  }
-
-  function start() {
-    var settings = {
-      past: true,
-      upcoming: true,
-      sameDayTimes: false,
-      dayNames: true,
-      pastTopN: 100,
-      upcomingTopN: 20,
-      recurringEvents: false,
-      itemsTagName: 'li',
-      upcomingSelector: '#events-upcoming',
-      pastSelector: '#events-past',
-      upcomingHeading: '<h2>Upcoming events</h2>',
-      pastHeading: '<h2>Past events</h2>',
-      format: ['*date*', ' - ', '*recurrence*', ' - ', '*summary*'],
-      timeMin: '2020-01-05T13:00:00.000Z',
-      timeMax: '2020-05-05T13:00:00.000Z'
-    }
-    //        format: ['*date*', ': ', '*summary*', ' &mdash; ', '*description*', ' in ', '*location*'],
-    console.log('RenderList')
-    init(settings)
+      //check for event that doesn't have any times (all day event)
+      event.isAllDayEvent = element.start && element.start.date && element.end.date ? true : false
+      result.push(event)
+    })
+    return result
   }
 
   onMount(() => {
-    start()
+    calendarEntries = extractCalendarDetails(events)
   })
 </script>
 
-<ul id="events-upcoming" />
-<br />
-<ul id="events-past" />
-<br />
+<ul>
+  {#each calendarEntries as event}
+    <li>{fmtDateShort(event.startDateTime)} - {event.summary}</li>
+  {/each}
+</ul>
