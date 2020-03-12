@@ -30,12 +30,22 @@
     termNumber += 1
     if (termNumber > 4) termNumber = 1
     setTermDates(terms[termNumber - 1])
-    dispatch('MESSAGE', { termIndex: termNumber - 1 })
+    dispatch('message', { termIndex: termNumber - 1 })
   }
 </script>
 
-<h2>
+<style>
+  .badge {
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .badge:focus {
+    outline: none;
+  }
+</style>
+
+<p class="lead">
   Displaying Courses for Term
-  <button on:click={changeTerm}>{termNumber}</button>
+  <button class="badge" on:click={changeTerm}>{termNumber}</button>
   {termDates}
-</h2>
+</p>

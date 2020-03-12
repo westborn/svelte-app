@@ -48,7 +48,7 @@
 
   let first = ''
   let last = ''
-  let i = 0
+  let i = ''
 
   $: filteredPeople = filterValue
     ? people.filter(person => {
@@ -90,44 +90,26 @@
 </script>
 
 <style>
-  * {
-    font-family: inherit;
-    font-size: inherit;
-  }
-
-  input {
-    display: block;
-    margin: 0 0 0.5em 0;
-  }
-
-  select {
-    float: left;
-    margin: 0 1em 1em 0;
-    width: 14em;
-  }
-
-  .buttons {
-    clear: both;
+  .app-select {
+    width: 75%;
   }
 </style>
 
 <div class="container">
+
   {#if initialised}
     <Terms
-      on:MESSAGE={e => {
+      on:message={e => {
         termIndex = e.detail.termIndex
       }}
       {terms} />
 
-    <RenderList {events} />
-
-    <input placeholder="Name filter" bind:value={filterValue} />
-
-    <select bind:value={i} size={10}>
-      {#each filteredPeople as person, i}
-        <option value={i}>{person.last}, {person.first}</option>
-      {/each}
-    </select>
+    <input placeholder="Course filter" bind:value={filterValue} />
+    <div class="app-select">
+      <select bind:value={i} size={10}>
+        <RenderList {events} />
+      </select>
+    </div>
 
     <label>
       <input bind:value={first} placeholder="first" />

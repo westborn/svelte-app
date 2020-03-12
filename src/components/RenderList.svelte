@@ -20,11 +20,12 @@
   const getDateUTC = dteStr => {
     return new Date(dteStr).toISOString()
   }
-  //Compare dates
+  //Compare dates from Google Calendar API
   const comp = (a, b) =>
     new Date(a.start.dateTime || a.start.date).getTime() -
     new Date(b.start.dateTime || b.start.date).getTime()
-  //Get all necessary data (dates, location, summary, description) and creates a data for a list item
+
+  //Get all necessary data (dates, location, summary, description) and creates object for render
   function extractCalendarDetails(data) {
     var result = []
 
@@ -36,6 +37,7 @@
 
     resultFiltered.forEach(element => {
       var event = {
+        id: '',
         summary: '',
         description: '',
         location: '',
@@ -45,6 +47,7 @@
         recurrence: [],
         extendedProperties: {}
       }
+      event.id = element.id || ''
       event.summary = element.summary || ''
       event.description = element.description || ''
       event.location = element.location || ''
@@ -64,8 +67,12 @@
   })
 </script>
 
-<ul>
+<!-- <ul>
   {#each calendarEntries as event}
     <li>{fmtDateShort(event.startDateTime)} - {event.summary}</li>
   {/each}
-</ul>
+</ul> -->
+
+{#each calendarEntries as event}
+  <option value={event.id}>{fmtDateShort(event.startDateTime)} - {event.summary}</option>
+{/each}

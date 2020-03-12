@@ -5,8 +5,9 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "sirv public",
-    "fix-up": "node -e \"const fs = require('fs');const fp='public/build/bundle.js.html';const d=fs.readFileSync(fp);fs.writeFileSync(fp, '<script>\\n' + d + '</script>');\"",
-    "push": "npm run build && npm run fix-up && clasp push"
+    "fix-up-js": "node -e \"const fs = require('fs');const fp='public/build/bundle.js.html';const d=fs.readFileSync(fp);fs.writeFileSync(fp, '<script>\\n' + d + '</script>');\"",
+    "fix-up-css": "cp public/build/bundle.css public/build/bundle.css.html",
+    "push": "npm run build && npm run fix-up-js && npm run fix-up-css && clasp push"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.0",

@@ -23,7 +23,7 @@ function codeGetEvents(req) {
   //  var calendarId = 'sv3qe35g5jv5lv2n6o10bfi7h0@group.calendar.google.com';
   var calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Test
   console.log(req)
-  var events = Calendar.Events.list(calendarId, req).items
+  var events = extractCalendarDetails(Calendar.Events.list(calendarId, req).items)
   return JSON.stringify(events)
 }
 
@@ -144,4 +144,49 @@ function findCalendarByName(name) {
   console.log(cal.getDescription())
   console.log(cal.getId())
   console.log(cal.getTimeZone())
+}
+
+const getDateUTC = dteStr => {
+  return new Date(dteStr).toISOString()
+}
+//Compare dates from Google Calendar API
+const comp = (a, b) =>
+  new Date(a.start.dateTime || a.start.date).getTime() -
+  new Date(b.start.dateTime || b.start.date).getTime()
+
+//Get all necessary data (dates, location, summary, description) and creates object for render
+function extractCalendarDetails(data) {
+  var result = []
+
+  //Remove cancelled events, sort by date
+  var resultFiltered = data
+    .filter(item => item && item.hasOwnProperty('status') && item.status !== 'cancelled')
+    .sort(comp)
+    .reverse()
+
+  resultFiltered.forEach(element => {
+    var event = {
+      id: '',
+      summary: '',
+      description: '',
+      location: '',
+      isAllDayEvent: false,
+      startDateTime: '',
+      endDateTime: '',
+      recurrence: [],
+      extendedProperties: {}
+    }
+    event.id = element.id || ''
+    event.summary = element.summary || ''
+    event.description = element.description || ''
+    event.location = element.location || ''
+    event.recurrence = element.recurrence || ''
+    event.startDateTime = getDateUTC(element.start.dateTime || element.start.date)
+    event.endDateTime = getDateUTC(element.end.dateTime || element.end.date)
+
+    //check for event that doesn't have any times (all day event)
+    event.isAllDayEvent = element.start && element.start.date && element.end.date ? true : false
+    result.push(event)
+  })
+  return result
 }
