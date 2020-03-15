@@ -19,7 +19,11 @@ const fmtDateShort = dtStr => {
   const [y, m, d] = splitDate(new Date(dtStr))
   return d + '-' + monthNames[m - 1]
 }
-
+const fmtDate = dtStr => {
+  if (typeof dtStr === 'undefined' || dtStr === '') return 'unknown'
+  const [y, m, d] = splitDate(new Date(dtStr))
+  return d + '-' + monthNames[m - 1] + '-' + y
+}
 function addDays(num, t1 = new Date()) {
   const t2 = new Date(t1)
   t2.setDate(t2.getDate() + num)
@@ -43,4 +47,4 @@ function addMinutes(num, t1 = new Date()) {
   return t2
 }
 
-export { ymd, splitDate, fmtDateShort, addDays, subDays, addHours, addMinutes }
+export { ymd, splitDate, fmtDateShort, fmtDate, addDays, subDays, addHours, addMinutes }

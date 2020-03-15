@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { createEventDispatcher } from 'svelte'
-  import { splitDate, fmtDateShort } from '../utils.js'
+  import { splitDate, fmtDate } from '../utils.js'
 
   const dispatch = createEventDispatcher()
 
@@ -10,7 +10,7 @@
   let termStartDate = ''
   let termEndDate = ''
   // Reactive for term fields
-  $: termDates = fmtDateShort(termStartDate) + ' - ' + fmtDateShort(termEndDate)
+  $: termDates = fmtDate(termStartDate) + ' - ' + fmtDate(termEndDate)
 
   onMount(() => {
     //compute the term we're currently in

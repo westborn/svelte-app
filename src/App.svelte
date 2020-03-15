@@ -1,7 +1,7 @@
 <script>
   import Terms from './components/Terms.svelte'
-  import RenderList from './components/RenderList.svelte'
   import { EVENTS, TERMS } from './DATA.js'
+  import { splitDate, fmtDate } from './utils'
 
   const LOCAL = true
 
@@ -9,6 +9,10 @@
     if (LOCAL) {
       showDates(TERMS)
       showEvents(EVENTS)
+      var elems = document.querySelectorAll('select')
+      console.log(elems)
+      var instances = M.FormSelect.init(elems)
+
       return
     } else {
       google.script.run.withSuccessHandler(showDates).codeGetDates()
@@ -26,7 +30,7 @@
     }
   }
   const showEvents = sheetEvents => {
-    console.log(sheetEvents)
+    // console.log(sheetEvents)
     events = JSON.parse(sheetEvents)
     initialised = true
   }
@@ -36,7 +40,29 @@
   let termIndex = 0
 
   let events = []
+  let filterValue = ''
+  let selectedId = ''
 
+  let summary = ''
+  let description = ''
+  let location = ''
+  let isAllDayEvent = false
+  let startDateTime = ''
+  let endDateTime = ''
+  let recurrence = []
+  let extendedProperties = {}
+
+  $: filteredEvents = filterValue
+    ? events.filter(event => {
+        const eventLine = `${fmtDate(event.startDateTime)} - ${event.summary}`
+        return eventLine.toLowerCase().match(filterValue.toLowerCase())
+      })
+    : events
+
+  $: selectedEvent = filteredEvents.filter(event => event.id === selectedId)
+
+  $: reset_inputs(selectedEvent[0])
+  // ======================================================
   let people = [
     { first: 'Hans', last: 'Emil' },
     { first: 'Max', last: 'Mustermann' },
@@ -44,7 +70,6 @@
   ]
 
   let initialised = false
-  let filterValue = ''
 
   let first = ''
   let last = ''
@@ -58,8 +83,6 @@
     : people
 
   $: selected = filteredPeople[i]
-
-  $: reset_inputs(selected)
 
   function create() {
     people = people.concat({ first, last })
@@ -83,16 +106,18 @@
     i = Math.min(i, filteredPeople.length - 2)
   }
 
-  function reset_inputs(person) {
-    first = person ? person.first : ''
-    last = person ? person.last : ''
+  function reset_inputs(event) {
+    console.log(`Event 106: ${event}`)
+    summary = event ? event.summary : ''
+    startDateTime = event ? fmtDate(event.startDateTime) : ''
+    description = event ? event.description : ''
+    location = event ? event.location : ''
+    recurrence = event ? event.recurrence[0] : ''
   }
 </script>
 
 <style>
-  .app-select {
-    width: 75%;
-  }
+
 </style>
 
 <div class="container">
@@ -103,20 +128,41 @@
         termIndex = e.detail.termIndex
       }}
       {terms} />
+    <p>{`selectedId = ${selectedId}`}</p>
 
-    <input placeholder="Course filter" bind:value={filterValue} />
-    <div class="app-select">
-      <select bind:value={i} size={10}>
-        <RenderList {events} />
-      </select>
+    <input class="my-2" placeholder="Course filter" bind:value={filterValue} />
+
+    <label>Select a Course</label>
+    <select bind:value={selectedId} size={filteredEvents.length}>
+      {#each filteredEvents as event}
+        <option value={event.id}>{fmtDate(event.startDateTime)} - {event.summary}</option>
+      {/each}
+    </select>
+
+    <div class="input-container my-2">
+      <input type="text" bind:value={summary} required="" />
+      <label>Summary</label>
     </div>
 
-    <label>
-      <input bind:value={first} placeholder="first" />
-    </label>
-    <label>
-      <input bind:value={last} placeholder="last" />
-    </label>
+    <div class="input-container">
+      <input type="text" bind:value={startDateTime} required="" />
+      <label>Start Date</label>
+    </div>
+
+    <div class="input-container">
+      <textarea bind:value={description} required="" rows="4" />
+      <label>Description</label>
+    </div>
+
+    <div class="input-container">
+      <input type="text" bind:value={location} required="" />
+      <label>Location</label>
+    </div>
+
+    <div class="input-container">
+      <input type="text" bind:value={recurrence} required="" />
+      <label>Recurrence</label>
+    </div>
 
     <div class="buttons">
       <button on:click={create} disabled={!first || !last}>create</button>
@@ -125,7 +171,7 @@
     </div>
 
     <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
-    <pre>{JSON.stringify(events, null, 2)}</pre>
+    <pre>{JSON.stringify(selectedEvent, null, 2)}</pre>
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
