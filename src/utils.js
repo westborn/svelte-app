@@ -16,7 +16,7 @@ const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
 const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
 const fmtDateShort = dtStr => {
   if (typeof dtStr === 'undefined' || dtStr === '') return 'unknown'
-  const [y, m, d] = splitDate(new Date(dtStr))
+  const [y, m] = splitDate(new Date(dtStr))
   return d + '-' + monthNames[m - 1]
 }
 const fmtDate = dtStr => {

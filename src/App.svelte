@@ -1,7 +1,7 @@
 <script>
   import Terms from './components/Terms.svelte'
   import { EVENTS, TERMS } from './DATA.js'
-  import { splitDate, fmtDate } from './utils'
+  import { splitDate, fmtDate, ymd } from './utils'
 
   const LOCAL = true
 
@@ -9,12 +9,9 @@
     if (LOCAL) {
       showDates(TERMS)
       showEvents(EVENTS)
-      var elems = document.querySelectorAll('select')
-      console.log(elems)
-      var instances = M.FormSelect.init(elems)
-
       return
     } else {
+      // console.log('calling showDates')
       google.script.run.withSuccessHandler(showDates).codeGetDates()
     }
   }
@@ -26,13 +23,51 @@
       timeMax: '2020-04-30T10:00:00-07:00'
     }
     if (!LOCAL) {
+      // console.log('calling showEvents')
       google.script.run.withSuccessHandler(showEvents).codeGetEvents(req)
     }
   }
   const showEvents = sheetEvents => {
+    // console.log('inside showEvents')
     // console.log(sheetEvents)
     events = JSON.parse(sheetEvents)
     initialised = true
+  }
+  const getUTCDateInfo = dte => {
+    const date = new Date(dte)
+    return [
+      date.getUTCDate(),
+      date.getUTCMonth(),
+      date.getUTCFullYear(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+      date.getUTCMilliseconds()
+    ]
+  }
+  const decodeRecurRule = event => {
+    console.log(`fmtEvent: ${JSON.stringify(event, null, 2)}`)
+    if (event[0] && event[0].recurrence) {
+      console.log(`fmtEvent: ${JSON.stringify(event[0].recurrence, null, 2)}`)
+      return rrule.RRule.fromString(event[0].recurrence[0])
+    } else {
+      return ''
+    }
+  }
+  const decodeRecurText = rule => rule.toText()
+
+  const decodeRecurDates = (eventRule, event) => {
+    console.log(`decodeRecurDates: ${event[0].startDateTime}`)
+    const newRule = new rrule.RRule({
+      ...eventRule.origOptions,
+      dtstart: new Date(event[0].startDateTime)
+    })
+    const futureDates = newRule
+      .all(function(date, i) {
+        return i < 6
+      })
+      .map(dte => ymd(dte))
+    return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
   }
 
   // Reactive for term fields
@@ -60,6 +95,9 @@
     : events
 
   $: selectedEvent = filteredEvents.filter(event => event.id === selectedId)
+  $: recurRule = decodeRecurRule(selectedEvent)
+  $: recurText = recurRule ? decodeRecurText(recurRule) : ''
+  $: recurDates = recurRule ? decodeRecurDates(recurRule, selectedEvent) : ''
 
   $: reset_inputs(selectedEvent[0])
   // ======================================================
@@ -107,7 +145,7 @@
   }
 
   function reset_inputs(event) {
-    console.log(`Event 106: ${event}`)
+    // console.log(`Event 109: ${event}`)
     summary = event ? event.summary : ''
     startDateTime = event ? fmtDate(event.startDateTime) : ''
     description = event ? event.description : ''
@@ -133,7 +171,7 @@
     <input class="my-2" placeholder="Course filter" bind:value={filterValue} />
 
     <label>Select a Course</label>
-    <select bind:value={selectedId} size={filteredEvents.length}>
+    <select class="select" bind:value={selectedId} size={filteredEvents.length}>
       {#each filteredEvents as event}
         <option value={event.id}>{fmtDate(event.startDateTime)} - {event.summary}</option>
       {/each}
@@ -163,6 +201,11 @@
       <input type="text" bind:value={recurrence} required="" />
       <label>Recurrence</label>
     </div>
+
+    {#if recurRule}
+      <p>Recurrence: {recurText}</p>
+      <p>Recurring : {recurDates}</p>
+    {/if}
 
     <div class="buttons">
       <button on:click={create} disabled={!first || !last}>create</button>
