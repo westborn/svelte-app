@@ -16,7 +16,7 @@ const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
 const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
 const fmtDateShort = dtStr => {
   if (typeof dtStr === 'undefined' || dtStr === '') return 'unknown'
-  const [y, m] = splitDate(new Date(dtStr))
+  const [y, m, d] = splitDate(new Date(dtStr))
   return d + '-' + monthNames[m - 1]
 }
 const fmtDate = dtStr => {
@@ -47,4 +47,27 @@ function addMinutes(num, t1 = new Date()) {
   return t2
 }
 
-export { ymd, splitDate, fmtDateShort, fmtDate, addDays, subDays, addHours, addMinutes }
+const getUTCDateInfo = dte => {
+  const date = new Date(dte)
+  return [
+    date.getUTCDate(),
+    date.getUTCMonth(),
+    date.getUTCFullYear(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds()
+  ]
+}
+
+export {
+  ymd,
+  splitDate,
+  fmtDateShort,
+  fmtDate,
+  addDays,
+  subDays,
+  addHours,
+  addMinutes,
+  getUTCDateInfo
+}

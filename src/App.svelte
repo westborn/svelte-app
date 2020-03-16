@@ -33,22 +33,11 @@
     events = JSON.parse(sheetEvents)
     initialised = true
   }
-  const getUTCDateInfo = dte => {
-    const date = new Date(dte)
-    return [
-      date.getUTCDate(),
-      date.getUTCMonth(),
-      date.getUTCFullYear(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds(),
-      date.getUTCMilliseconds()
-    ]
-  }
+
   const decodeRecurRule = event => {
-    console.log(`fmtEvent: ${JSON.stringify(event, null, 2)}`)
+    // console.log(`fmtEvent: ${JSON.stringify(event, null, 2)}`)
     if (event[0] && event[0].recurrence) {
-      console.log(`fmtEvent: ${JSON.stringify(event[0].recurrence, null, 2)}`)
+      // console.log(`fmtEvent: ${JSON.stringify(event[0].recurrence, null, 2)}`)
       return rrule.RRule.fromString(event[0].recurrence[0])
     } else {
       return ''
@@ -57,16 +46,12 @@
   const decodeRecurText = rule => rule.toText()
 
   const decodeRecurDates = (eventRule, event) => {
-    console.log(`decodeRecurDates: ${event[0].startDateTime}`)
+    // console.log(`decodeRecurDates: ${event[0].startDateTime}`)
     const newRule = new rrule.RRule({
       ...eventRule.origOptions,
       dtstart: new Date(event[0].startDateTime)
     })
-    const futureDates = newRule
-      .all(function(date, i) {
-        return i < 6
-      })
-      .map(dte => ymd(dte))
+    const futureDates = newRule.all((date, i) => i < 6).map(dte => ymd(dte))
     return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
   }
 
@@ -145,12 +130,13 @@
   }
 
   function reset_inputs(event) {
-    // console.log(`Event 109: ${event}`)
+    // console.log(`reset_imputs: ${event}`)
+    selectedId = event ? event.id : ''
     summary = event ? event.summary : ''
     startDateTime = event ? fmtDate(event.startDateTime) : ''
     description = event ? event.description : ''
     location = event ? event.location : ''
-    recurrence = event ? event.recurrence[0] : ''
+    recurrence = event && event.recurrence[0] ? event.recurrence[0] : ''
   }
 </script>
 
@@ -170,40 +156,43 @@
 
     <input class="my-2" placeholder="Course filter" bind:value={filterValue} />
 
-    <label>Select a Course</label>
-    <select class="select" bind:value={selectedId} size={filteredEvents.length}>
+    <select
+      class="select"
+      bind:value={selectedId}
+      size={filteredEvents.length < 5 ? 5 : filteredEvents.length + 1}>
+      <option value="" disabled>Select a Course</option>
       {#each filteredEvents as event}
         <option value={event.id}>{fmtDate(event.startDateTime)} - {event.summary}</option>
       {/each}
     </select>
 
     <div class="input-container my-2">
-      <input type="text" bind:value={summary} required="" />
+      <input type="text" bind:value={summary} />
       <label>Summary</label>
     </div>
 
     <div class="input-container">
-      <input type="text" bind:value={startDateTime} required="" />
+      <input type="text" bind:value={startDateTime} />
       <label>Start Date</label>
     </div>
 
     <div class="input-container">
-      <textarea bind:value={description} required="" rows="4" />
+      <textarea bind:value={description} rows="4" />
       <label>Description</label>
     </div>
 
     <div class="input-container">
-      <input type="text" bind:value={location} required="" />
+      <input type="text" bind:value={location} />
       <label>Location</label>
     </div>
 
     <div class="input-container">
-      <input type="text" bind:value={recurrence} required="" />
+      <input type="text" bind:value={recurText} />
       <label>Recurrence</label>
     </div>
 
     {#if recurRule}
-      <p>Recurrence: {recurText}</p>
+      <p>Recurrence: {recurrence}</p>
       <p>Recurring : {recurDates}</p>
     {/if}
 

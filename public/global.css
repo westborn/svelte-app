@@ -303,39 +303,40 @@ textarea {
 }
 
 .input-container {
-  position:relative;
-	margin-bottom:25px;
+  position: relative;
+  margin-bottom: 25px;
   background-color: LIGHTYELLOW;
 }
 
 .input-container label {
-	position:absolute;
-	top:0px;
-	left:0px;
-  font-size:1em;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  font-size: 1em;
   color: #333;
-	transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
 }
-.input-container input{
-  border:0;
-  border-bottom:1px solid #555;
-  background:transparent;
-  width:100%;
-  padding:8px 0 5px 0;
-  font-size:16px;
+.input-container input {
+  border: 0;
+  border-bottom: 1px solid #555;
+  background: transparent;
+  width: 100%;
+  padding: 8px 0 5px 0;
+  font-size: 16px;
   color: #333;
 }
-.input-container :focus{
- border:none;
- outline:none;
- border-bottom:1px solid #e74c3c;
+.input-container :focus {
+  border: none;
+  outline: none;
+  border-bottom: 1px solid #e74c3c;
 }
 
 .input-container :focus ~ label,
-.input-container :valid ~ label{
+.input-container :valid ~ label {
   /* background-color: green; */
-	top:-16px;
-  font-size:14px;
+  top: -16px;
+  font-size: 14px;
+}
 
 /* Mobile Styles */
 @media (max-width: 700px) {
@@ -361,3 +362,4 @@ textarea {
   .lead {
     font-size: 1rem;
   }
+}
