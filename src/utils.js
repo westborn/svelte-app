@@ -12,6 +12,16 @@ const monthNames = [
   'Nov',
   'Dec'
 ]
+const dmy = (t = new Date()) =>
+  t
+    .getDate()
+    .toString()
+    .padStart(2, 0) +
+  '-' +
+  monthNames[t.getMonth()] +
+  '-' +
+  t.getFullYear()
+
 const ymd = (t = new Date()) => t.toISOString().slice(0, 10)
 const splitDate = (t = new Date()) => t.toISOString().split(/[^\d]/)
 const fmtDateShort = dtStr => {
@@ -60,7 +70,18 @@ const getUTCDateInfo = dte => {
   ]
 }
 
+function checkNested(obj, level, ...rest) {
+  if (obj === undefined) return false
+  if (rest.length == 0 && obj.hasOwnProperty(level)) return true
+  return checkNested(obj[level], ...rest)
+}
+
+function getNested(obj, ...args) {
+  return args.reduce((obj, level) => obj && obj[level], obj)
+}
+
 export {
+  dmy,
   ymd,
   splitDate,
   fmtDateShort,
@@ -69,5 +90,7 @@ export {
   subDays,
   addHours,
   addMinutes,
-  getUTCDateInfo
+  getUTCDateInfo,
+  checkNested,
+  getNested
 }

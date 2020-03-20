@@ -2,11 +2,14 @@
 
 /* Global Styles */
 :root {
-  --primary-color: #204f6e;
+  --primary-color: #204F6E;
   --dark-color: #333333;
-  --light-color: #f4f4f4;
-  --danger-color: #dc3545;
-  --success-color: #28a745;
+  --light-gray: #bbbbbb;
+  --mid-gray: #808080;
+  --light-color: #FAFAFA;
+  --danger-color: #DC3545;
+  --success-color: #28A745;
+  --border-color: #CCCCCC;
 }
 
 * {
@@ -19,8 +22,8 @@ body {
   font-family: 'Roboto', sans-serif;
   font-size: 1rem;
   line-height: 1.6;
-  background-color: #fff;
-  color: #333;
+  background-color: var(--light-color);
+  color: var(--dark-color);
 }
 
 a {
@@ -42,10 +45,10 @@ img {
 
 /* Utilities */
 .container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: auto;
   overflow: hidden;
-  padding: 0 2rem;
+  /* padding: 0 2rem; */
 }
 
 /* Text Styles*/
@@ -93,7 +96,7 @@ img {
 /* Cards */
 .card {
   padding: 1rem;
-  border: #ccc 1px dotted;
+  border: var(--border-color) 1px dotted;
   margin: 0.7rem 0;
 }
 
@@ -158,35 +161,10 @@ img {
   margin: 3rem 0;
 }
 
-/* Grid */
-.grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 2rem;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 1rem;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 2rem;
-}
-
-.grid-2-3 {
-  display: grid;
-  grid-template-columns: 2fr 3fr;
-  grid-gap: 2rem;
-}
-
 .btn {
   display: inline-block;
   background: var(--light-color);
-  color: #333;
+  color: var(--dark-color);
   padding: 0.4rem 1.3rem;
   font-size: 1rem;
   border: none;
@@ -219,7 +197,7 @@ img {
   text-align: center;
   margin: 0.3rem;
   background: var(--light-color);
-  color: #333;
+  color: var(--dark-color);
   border-radius: 5px;
 }
 
@@ -228,7 +206,7 @@ img {
   margin: 1rem 0;
   opacity: 0.9;
   background: var(--light-color);
-  color: #333;
+  color: var(--dark-color);
 }
 
 .btn-primary,
@@ -236,7 +214,7 @@ img {
 .badge-primary,
 .alert-primary {
   background: var(--primary-color);
-  color: #fff;
+  color: var(--light-color);
 }
 
 .btn-light,
@@ -244,7 +222,7 @@ img {
 .badge-light,
 .alert-light {
   background: var(--light-color);
-  color: #333;
+  color: var(--dark-color);
 }
 
 .btn-dark,
@@ -252,7 +230,7 @@ img {
 .badge-dark,
 .alert-dark {
   background: var(--dark-color);
-  color: #fff;
+  color: var(--light-color);
 }
 
 .btn-danger,
@@ -260,7 +238,7 @@ img {
 .badge-danger,
 .alert-danger {
   background: var(--danger-color);
-  color: #fff;
+  color: var(--light-color);
 }
 
 .btn-success,
@@ -268,16 +246,16 @@ img {
 .badge-success,
 .alert-success {
   background: var(--success-color);
-  color: #fff;
+  color: var(--light-color);
 }
 
 .btn-white,
 .bg-white,
 .badge-white,
 .alert-white {
-  background: #fff;
-  color: #333;
-  border: #ccc solid 1px;
+  background: var(--light-color);
+  color: var(--dark-color);
+  border: var(--border-color) solid 1px;
 }
 
 .btn:hover {
@@ -286,7 +264,7 @@ img {
 
 .bg-light,
 .badge-light {
-  border: #ccc solid 1px;
+  border: var(--border-color) solid 1px;
 }
 
 .round-img {
@@ -297,7 +275,7 @@ input,
 select,
 textarea {
   display: block;
-  width: 80% !important;
+  width: 90% !important;
   font-family: inherit;
   font-size: inherit;
 }
@@ -313,7 +291,7 @@ textarea {
   top: 0px;
   left: 0px;
   font-size: 1em;
-  color: #333;
+  color: var(--light-gray)
   transition: all 0.5s ease-in-out;
 }
 .input-container input {
@@ -323,7 +301,7 @@ textarea {
   width: 100%;
   padding: 8px 0 5px 0;
   font-size: 16px;
-  color: #333;
+  color: var(--dark-color);
 }
 .input-container :focus {
   border: none;

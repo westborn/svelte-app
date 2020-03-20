@@ -1,9 +1,20 @@
 <script>
   import Terms from './components/Terms.svelte'
+  import Event from './components/Event.svelte'
   import { EVENTS, TERMS } from './DATA.js'
-  import { splitDate, fmtDate, ymd } from './utils'
+  import { splitDate, fmtDate, dmy } from './utils'
 
   const LOCAL = true
+
+  function populateVenues(venues) {
+    console.log(venues)
+  }
+  function populatePresenters(presenters) {
+    console.log(presenters)
+  }
+  function populateContacts(contacts) {
+    console.log(contacts)
+  }
 
   const doIninitialise = () => {
     if (LOCAL) {
@@ -12,6 +23,9 @@
       return
     } else {
       // console.log('calling showDates')
+      google.script.run.withSuccessHandler(populateVenues).getList('venues')
+      google.script.run.withSuccessHandler(populatePresenters).getList('presenters')
+      google.script.run.withSuccessHandler(populateContacts).getList('contacts')
       google.script.run.withSuccessHandler(showDates).codeGetDates()
     }
   }
@@ -34,58 +48,15 @@
     initialised = true
   }
 
-  const decodeRecurRule = event => {
-    // console.log(`fmtEvent: ${JSON.stringify(event, null, 2)}`)
-    if (event[0] && event[0].recurrence) {
-      // console.log(`fmtEvent: ${JSON.stringify(event[0].recurrence, null, 2)}`)
-      return rrule.RRule.fromString(event[0].recurrence[0])
-    } else {
-      return ''
-    }
-  }
-  const decodeRecurText = rule => rule.toText()
-
-  const decodeRecurDates = (eventRule, event) => {
-    // console.log(`decodeRecurDates: ${event[0].startDateTime}`)
-    const newRule = new rrule.RRule({
-      ...eventRule.origOptions,
-      dtstart: new Date(event[0].startDateTime)
-    })
-    const futureDates = newRule.all((date, i) => i < 6).map(dte => ymd(dte))
-    return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
-  }
-
   // Reactive for term fields
   let terms = []
   let termIndex = 0
 
   let events = []
-  let filterValue = ''
-  let selectedId = ''
+  let eventId = ''
 
-  let summary = ''
-  let description = ''
-  let location = ''
-  let isAllDayEvent = false
-  let startDateTime = ''
-  let endDateTime = ''
-  let recurrence = []
-  let extendedProperties = {}
-
-  $: filteredEvents = filterValue
-    ? events.filter(event => {
-        const eventLine = `${fmtDate(event.startDateTime)} - ${event.summary}`
-        return eventLine.toLowerCase().match(filterValue.toLowerCase())
-      })
-    : events
-
-  $: selectedEvent = filteredEvents.filter(event => event.id === selectedId)
-  $: recurRule = decodeRecurRule(selectedEvent)
-  $: recurText = recurRule ? decodeRecurText(recurRule) : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, selectedEvent) : ''
-
-  $: reset_inputs(selectedEvent[0])
   // ======================================================
+  let filterValue
   let people = [
     { first: 'Hans', last: 'Emil' },
     { first: 'Max', last: 'Mustermann' },
@@ -128,16 +99,6 @@
     first = last = ''
     i = Math.min(i, filteredPeople.length - 2)
   }
-
-  function reset_inputs(event) {
-    // console.log(`reset_imputs: ${event}`)
-    selectedId = event ? event.id : ''
-    summary = event ? event.summary : ''
-    startDateTime = event ? fmtDate(event.startDateTime) : ''
-    description = event ? event.description : ''
-    location = event ? event.location : ''
-    recurrence = event && event.recurrence[0] ? event.recurrence[0] : ''
-  }
 </script>
 
 <style>
@@ -152,49 +113,16 @@
         termIndex = e.detail.termIndex
       }}
       {terms} />
-    <p>{`selectedId = ${selectedId}`}</p>
 
-    <input class="my-2" placeholder="Course filter" bind:value={filterValue} />
+    <p>{`eventId = ${eventId}`}</p>
 
-    <select
-      class="select"
-      bind:value={selectedId}
-      size={filteredEvents.length < 5 ? 5 : filteredEvents.length + 1}>
-      <option value="" disabled>Select a Course</option>
-      {#each filteredEvents as event}
-        <option value={event.id}>{fmtDate(event.startDateTime)} - {event.summary}</option>
-      {/each}
-    </select>
+    <Event
+      on:message={e => {
+        eventId = e.detail.eventId
+      }}
+      {events} />
 
-    <div class="input-container my-2">
-      <input type="text" bind:value={summary} />
-      <label>Summary</label>
-    </div>
-
-    <div class="input-container">
-      <input type="text" bind:value={startDateTime} />
-      <label>Start Date</label>
-    </div>
-
-    <div class="input-container">
-      <textarea bind:value={description} rows="4" />
-      <label>Description</label>
-    </div>
-
-    <div class="input-container">
-      <input type="text" bind:value={location} />
-      <label>Location</label>
-    </div>
-
-    <div class="input-container">
-      <input type="text" bind:value={recurText} />
-      <label>Recurrence</label>
-    </div>
-
-    {#if recurRule}
-      <p>Recurrence: {recurrence}</p>
-      <p>Recurring : {recurDates}</p>
-    {/if}
+    <!-- <p>{`selectedId = ${selectedId}`}</p> -->
 
     <div class="buttons">
       <button on:click={create} disabled={!first || !last}>create</button>
@@ -202,8 +130,8 @@
       <button on:click={remove} disabled={!selected}>delete</button>
     </div>
 
-    <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
-    <pre>{JSON.stringify(selectedEvent, null, 2)}</pre>
+    <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
+    <pre>{JSON.stringify(selectedEvent, null, 2)}</pre> -->
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}

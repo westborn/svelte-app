@@ -95,6 +95,10 @@ function getList(colName) {
   return listObj
 }
 
+function getNested(obj, ...args) {
+  return args.reduce((obj, level) => obj && obj[level], obj)
+}
+
 function getEventList(data) {
   var selectedDate = new Date(data.date)
   console.log(selectedDate)
@@ -174,8 +178,17 @@ function extractCalendarDetails(data) {
       startDateTime: '',
       endDateTime: '',
       recurrence: [],
-      extendedProperties: {}
+      extendedProperties: {
+        private: {
+          presenter: '',
+          contact: '',
+          min: '',
+          max: '',
+          cost: ''
+        }
+      }
     }
+
     event.id = element.id || ''
     event.summary = element.summary || ''
     event.description = element.description || ''
@@ -183,9 +196,40 @@ function extractCalendarDetails(data) {
     event.recurrence = element.recurrence || ''
     event.startDateTime = getDateUTC(element.start.dateTime || element.start.date)
     event.endDateTime = getDateUTC(element.end.dateTime || element.end.date)
-
     //check for event that doesn't have any times (all day event)
     event.isAllDayEvent = element.start && element.start.date && element.end.date ? true : false
+
+    event.extendedProperties.private.presenter = getNested(
+      element,
+      'extendedProperties',
+      'private',
+      'presenter'
+    )
+    event.extendedProperties.private.contact = getNested(
+      element,
+      'extendedProperties',
+      'private',
+      'contact'
+    )
+    event.extendedProperties.private.min = getNested(
+      element,
+      'extendedProperties',
+      'private',
+      'min'
+    )
+    event.extendedProperties.private.max = getNested(
+      element,
+      'extendedProperties',
+      'private',
+      'max'
+    )
+    event.extendedProperties.private.cost = getNested(
+      element,
+      'extendedProperties',
+      'private',
+      'cost'
+    )
+
     result.push(event)
   })
   return result
