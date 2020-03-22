@@ -136,9 +136,55 @@ function listUpcomingEvents(startDate) {
   return result
 }
 
-function addEvent(event) {
+function eventAdd(event) {
   console.log('Add Event:\n')
   console.log(event)
+}
+
+function test() {
+  const payload = {
+    id: '07rafrh9t0pdv74bgoqlle1qtv',
+    summary: 'Another 3 Day event again'
+  }
+  const result = eventUpdate(payload)
+  console.log(result)
+}
+
+function eventUpdate(event) {
+  console.log('Update Event:\n')
+  console.log(event)
+  const calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Tsey
+  const res = {}
+  try {
+    payload = {
+      summary: event.summary
+    }
+    const data = Calendar.Events.patch(payload, calendarId, (eventId = event.id))
+    res.error = false
+    res.data = data
+  } catch (err) {
+    res.error = true
+    res.name - err.name
+    res.message = err.message
+  }
+  return res
+}
+
+function eventRemove(event) {
+  console.log('Remove Event:\n')
+  console.log(event)
+  const calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Tsey
+  const res = {}
+  try {
+    var data = Calendar.Events.delete(calendarId, event.id)
+    res.error = false
+    res.data = data
+  } catch (err) {
+    res.error = true
+    res.name - err.name
+    res.message = err.message
+  }
+  return res
 }
 
 function findCalendarByName(name) {

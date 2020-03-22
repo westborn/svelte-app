@@ -1,6 +1,7 @@
 <script>
   import Terms from './components/Terms.svelte'
   import Event from './components/Event.svelte'
+  import EventForm from './components/EventForm.svelte'
   import { EVENTS, TERMS } from './DATA.js'
   import { splitDate, fmtDate, dmy } from './utils'
 
@@ -53,51 +54,39 @@
   let termIndex = 0
 
   let events = []
+  let event = {}
   let eventId = ''
-
-  // ======================================================
-  let filterValue
-  let people = [
-    { first: 'Hans', last: 'Emil' },
-    { first: 'Max', last: 'Mustermann' },
-    { first: 'Roman', last: 'Tisch' }
-  ]
+  let formEvent = {}
 
   let initialised = false
 
-  let first = ''
-  let last = ''
-  let i = ''
-
-  $: filteredPeople = filterValue
-    ? people.filter(person => {
-        const name = `${person.last}, ${person.first}`
-        return name.toLowerCase().match(filterValue.toLowerCase())
-      })
-    : people
-
-  $: selected = filteredPeople[i]
+  let formType = ''
 
   function create() {
-    people = people.concat({ first, last })
-    i = people.length - 1
-    first = last = ''
+    formType = 'create'
+    formEvent = undefined
+  }
+  function createEvent(event) {
+    console.log('Ready to Create')
+    formType = ''
   }
 
   function update() {
-    selected.first = first
-    selected.last = last
-    console.log(i)
-    people = people
+    formType = 'update'
+    event = events.filter(event => event.id === eventId)
+  }
+  function updateEvent(event) {
+    formType = ''
+    console.log('Ready to Update')
   }
 
   function remove() {
-    // Remove selected person from the source array (people), not the filtered array
-    const index = people.indexOf(selected)
-    people = [...people.slice(0, index), ...people.slice(index + 1)]
-
-    first = last = ''
-    i = Math.min(i, filteredPeople.length - 2)
+    formType = 'remove'
+    event = { id: eventId }
+  }
+  function removeEvent(event) {
+    formType = ''
+    console.log('Ready to Remove')
   }
 </script>
 
@@ -124,14 +113,36 @@
 
     <!-- <p>{`selectedId = ${selectedId}`}</p> -->
 
-    <div class="buttons">
-      <button on:click={create} disabled={!first || !last}>create</button>
-      <button on:click={update} disabled={!first || !last || !selected}>update</button>
-      <button on:click={remove} disabled={!selected}>delete</button>
+    <div class="buttons mt-2">
+      <button on:click={create} disabled={formType === 'create'}>Create</button>
+      <button on:click={update} disabled={formType === 'update'}>Update</button>
+      <button on:click={remove} disabled={formType === 'remove'}>Delete</button>
     </div>
 
-    <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre>
-    <pre>{JSON.stringify(selectedEvent, null, 2)}</pre> -->
+    {#if formType != ''}
+      <div class="">
+        <EventForm
+          {formType}
+          {formEvent}
+          on:eventCreate={e => {
+            event = e.detail.event
+            console.log('Created')
+            createEvent(event)
+          }}
+          on:eventUpdate={e => {
+            event = e.detail.event
+            console.log('Updated')
+            updateEvent(event)
+          }}
+          on:eventRemove={e => {
+            event = e.detail.event
+            console.log('Removed')
+            removeEvent(event)
+          }} />
+      </div>
+    {/if}
+    <!-- <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre> -->
+    <pre>{JSON.stringify(events.filter(event => event.id === eventId), null, 2)}</pre>
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
