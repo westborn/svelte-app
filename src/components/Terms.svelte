@@ -6,6 +6,8 @@
   const dispatch = createEventDispatcher()
 
   export let terms
+  export let disabled
+
   let termNumber = 1
   let termStartDate = ''
   let termEndDate = ''
@@ -39,6 +41,9 @@
     font-size: 1rem;
     cursor: pointer;
   }
+  button:disabled {
+    cursor: not-allowed;
+  }
   .badge:focus {
     outline: none;
   }
@@ -46,6 +51,6 @@
 
 <p class="lead">
   Displaying Courses for Term
-  <button class="badge" on:click={changeTerm}>{termNumber}</button>
+  <button {disabled} class="badge" on:click={changeTerm}>{termNumber}</button>
   {termDates}
 </p>

@@ -1,11 +1,28 @@
 <script>
+  import { onMount } from 'svelte'
   import { createEventDispatcher } from 'svelte'
-  import { fmtDate, dmy, getNested, checkNested } from '../utils'
+  import { ymd } from '../utils'
 
   const dispatch = createEventDispatcher()
 
   export let event = {}
   export let formType = ''
+
+  onMount(() => {
+    //setup data entry for add/update/remove
+    if (formType === 'update') {
+      console.log(event)
+      summary = event.summary
+      description = event.description
+      location = event.location
+      startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
+      presenter = event.extendedProperties.private.presenter
+      contact = event.extendedProperties.private.contact
+      minEnrol = event.extendedProperties.private.min
+      maxEnrol = event.extendedProperties.private.max
+      cost = event.extendedProperties.private.cost
+    }
+  })
 
   const decodeRecurDates = (eventRule, dte) => {
     const newRule = new rrule.RRule({
@@ -17,47 +34,47 @@
   }
 
   const addNewEvent = () => {
-    addedEvent.summary = summary
-    addedEvent.description = description
-    addedEvent.location = location
-    addedEvent.isAllDayEvent = true
-    addedEvent.startDateTime = startDateTime
-    addedEvent.endDateTime = startDateTime
-    addedEvent.recurrence = recurrence
-    addedEvent.extendedProperties.private.presenter = presenter
-    addedEvent.extendedProperties.private.contact = contact
-    addedEvent.extendedProperties.private.min = minEnrol
-    addedEvent.extendedProperties.private.max = maxEnrol
-    addedEvent.extendedProperties.private.cost = cost
-    dispatch('eventCreate', { event: addedEvent })
+    resultEvent.summary = summary
+    resultEvent.description = description
+    resultEvent.location = location
+    resultEvent.isAllDayEvent = true
+    resultEvent.startDateTime = startDate
+    resultEvent.endDateTime = startDate
+    resultEvent.recurrence = recurrence
+    resultEvent.extendedProperties.private.presenter = presenter
+    resultEvent.extendedProperties.private.contact = contact
+    resultEvent.extendedProperties.private.min = minEnrol
+    resultEvent.extendedProperties.private.max = maxEnrol
+    resultEvent.extendedProperties.private.cost = cost
+    dispatch('eventCreate', { event: resultEvent })
   }
 
   const updateEvent = () => {
-    addedEvent.summary = summary
-    addedEvent.description = description
-    addedEvent.location = location
-    addedEvent.isAllDayEvent = true
-    addedEvent.startDateTime = startDateTime
-    addedEvent.endDateTime = startDateTime
-    addedEvent.recurrence = recurrence
-    addedEvent.extendedProperties.private.presenter = presenter
-    addedEvent.extendedProperties.private.contact = contact
-    addedEvent.extendedProperties.private.min = minEnrol
-    addedEvent.extendedProperties.private.max = maxEnrol
-    addedEvent.extendedProperties.private.cost = cost
-    dispatch('eventUpdate', { event: addedEvent })
+    resultEvent.summary = summary
+    resultEvent.description = description
+    resultEvent.location = location
+    resultEvent.isAllDayEvent = true
+    resultEvent.startDateTime = startDate
+    resultEvent.endDateTime = startDate
+    resultEvent.recurrence = recurrence
+    resultEvent.extendedProperties.private.presenter = presenter
+    resultEvent.extendedProperties.private.contact = contact
+    resultEvent.extendedProperties.private.min = minEnrol
+    resultEvent.extendedProperties.private.max = maxEnrol
+    resultEvent.extendedProperties.private.cost = cost
+    dispatch('eventUpdate', { event: resultEvent })
   }
 
   const removeEvent = () => {
-    addedEvent.id = id
-    dispatch('eventRemove', { event: addedEvent })
+    resultEvent.id = id
+    dispatch('eventRemove', { event: resultEvent })
   }
 
   let id = ''
   let summary = ''
   let description = ''
   let location = ''
-  let startDateTime = ''
+  let startDate = ''
   let recurrence = []
   let contact = ''
   let presenter = ''
@@ -65,13 +82,13 @@
   let maxEnrol = ''
   let cost = ''
   let minMaxCost = ''
-  let valid = true
+  let valid = true //TODO
 
   $: recurRule = recurrence[0] ? rrule.RRule.fromString(recurrence[0]) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, startDateTime) : ''
+  $: recurDates = recurRule ? decodeRecurDates(recurRule, startDate) : ''
 
-  const addedEvent = {
+  let resultEvent = {
     id: null,
     description: '',
     location: '',
@@ -95,8 +112,9 @@
 <style>
   .grid-2 {
     display: grid;
+    width: 80%;
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 0rem;
+    grid-gap: 1rem;
   }
   .col-1 {
     grid-column-start: 1;
@@ -110,46 +128,53 @@
   }
 </style>
 
-<div class="grid-2 mt-3">
+{#if formType === 'remove'}
+  <br />
+  <h3>
+    About to delete this event -
+    <span class="bg-danger">{event.summary}</span>
+  </h3>
+{:else}
+  <div class="grid-2 mt-3">
 
-  <div class="input-container col-1">
-    <input type="text" bind:value={summary} />
-    <label>Summary</label>
+    <div class="input-container col-1">
+      <input type="text" bind:value={summary} />
+      <label>Summary</label>
+    </div>
+
+    <div class="input-container col-2">
+      <input type="text" bind:value={location} />
+      <label>Location</label>
+    </div>
+
+    <div class="input-container col-1">
+      <input type="date" bind:value={startDate} />
+      <label>Start Date</label>
+    </div>
+
+    <div class="input-container col-2">
+      <input type="text" bind:value={presenter} />
+      <label>Presenter</label>
+    </div>
+
+    <div class="input-container col-1">
+      <textarea bind:value={description} rows="4" />
+      <label>Description</label>
+    </div>
+
+    <div class="input-container col-2">
+      <input type="text" bind:value={contact} />
+      <label>Contact</label>
+    </div>
   </div>
 
-  <div class="input-container col-2">
-    <input type="text" bind:value={location} />
-    <label>Location</label>
+  <div class="inline input-container col-1">
+    <input class="inline" type="text" bind:value={minEnrol} />
+    <label>Min/Max/Cost</label>
+    <input class="inline" type="text" bind:value={maxEnrol} />
+    <input class="inline" type="text" bind:value={cost} />
   </div>
-
-  <div class="input-container col-1">
-    <input type="date" bind:value={startDateTime} />
-    <label>Start Date</label>
-  </div>
-
-  <div class="input-container col-2">
-    <input type="text" bind:value={presenter} />
-    <label>Presenter</label>
-  </div>
-
-  <div class="input-container col-1">
-    <textarea bind:value={description} rows="4" />
-    <label>Description</label>
-  </div>
-
-  <div class="input-container col-2">
-    <input type="text" bind:value={contact} />
-    <label>Contact</label>
-  </div>
-</div>
-
-<div class="inline input-container col-1">
-  <input class="inline" type="text" bind:value={minEnrol} />
-  <label>Min/Max/Cost</label>
-  <input class="inline" type="text" bind:value={maxEnrol} />
-  <input class="inline" type="text" bind:value={cost} />
-</div>
-
+{/if}
 <br />
 <div class="buttons">
   {#if formType === 'create'}
@@ -161,5 +186,13 @@
   {:else}
     <p>Nothing to do</p>
   {/if}
+
+  <button
+    on:click={() => {
+      console.log('Cancelled')
+      dispatch('eventCancel')
+    }}>
+    Cancel
+  </button>
 
 </div>

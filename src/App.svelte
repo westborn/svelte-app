@@ -5,7 +5,7 @@
   import { EVENTS, TERMS } from './DATA.js'
   import { splitDate, fmtDate, dmy } from './utils'
 
-  const LOCAL = true
+  const LOCAL = false
 
   function populateVenues(venues) {
     console.log(venues)
@@ -54,6 +54,7 @@
   let termIndex = 0
 
   let events = []
+  let allowEventdisplay = false
   let event = {}
   let eventId = ''
   let formEvent = {}
@@ -64,34 +65,45 @@
 
   function create() {
     formType = 'create'
+    allowEventdisplay = true
     formEvent = undefined
   }
   function createEvent(event) {
     console.log('Ready to Create')
+    allowEventdisplay = false
     formType = ''
   }
 
   function update() {
     formType = 'update'
-    event = events.filter(event => event.id === eventId)
+    allowEventdisplay = true
+    event = events.find(event => event.id === eventId)
   }
   function updateEvent(event) {
     formType = ''
+    allowEventdisplay = false
     console.log('Ready to Update')
   }
 
   function remove() {
     formType = 'remove'
-    event = { id: eventId }
+    allowEventdisplay = true
+    event = events.find(event => event.id === eventId)
   }
   function removeEvent(event) {
     formType = ''
+    allowEventdisplay = false
     console.log('Ready to Remove')
   }
 </script>
 
 <style>
-
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="container">
@@ -101,7 +113,8 @@
       on:message={e => {
         termIndex = e.detail.termIndex
       }}
-      {terms} />
+      {terms}
+      disabled={allowEventdisplay} />
 
     <p>{`eventId = ${eventId}`}</p>
 
@@ -109,40 +122,43 @@
       on:message={e => {
         eventId = e.detail.eventId
       }}
-      {events} />
+      {events}
+      disabled={allowEventdisplay} />
 
     <!-- <p>{`selectedId = ${selectedId}`}</p> -->
 
     <div class="buttons mt-2">
-      <button on:click={create} disabled={formType === 'create'}>Create</button>
-      <button on:click={update} disabled={formType === 'update'}>Update</button>
-      <button on:click={remove} disabled={formType === 'remove'}>Delete</button>
+      <button on:click={create} disabled={allowEventdisplay}>Add New Course</button>
+      <button on:click={update} disabled={allowEventdisplay || eventId === ''}>
+        Update Selected Course
+      </button>
+      <button on:click={remove} disabled={allowEventdisplay || eventId === ''}>
+        Delete Selected Course
+      </button>
     </div>
 
     {#if formType != ''}
       <div class="">
         <EventForm
           {formType}
-          {formEvent}
+          {event}
+          on:eventCancel={() => {
+            formType = ''
+            allowEventdisplay = false
+          }}
           on:eventCreate={e => {
-            event = e.detail.event
-            console.log('Created')
-            createEvent(event)
+            createEvent(e.detail.event)
           }}
           on:eventUpdate={e => {
-            event = e.detail.event
-            console.log('Updated')
-            updateEvent(event)
+            updateEvent(e.detail.event)
           }}
           on:eventRemove={e => {
-            event = e.detail.event
-            console.log('Removed')
-            removeEvent(event)
+            removeEvent(e.detail.event)
           }} />
       </div>
     {/if}
     <!-- <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre> -->
-    <pre>{JSON.stringify(events.filter(event => event.id === eventId), null, 2)}</pre>
+    <!-- <pre>{JSON.stringify(events.filter(event => event.id === eventId), null, 2)}</pre> -->
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}

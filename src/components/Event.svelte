@@ -49,6 +49,7 @@
   $: {
     dispatch('message', { eventId: selectedId })
   }
+  export let disabled
 
   let filterValue = ''
   let selectedId = ''
@@ -98,13 +99,26 @@
   .field-name {
     color: var(--mid-gray);
   }
+  select {
+    cursor: pointer;
+  }
+  select:disabled {
+    cursor: not-allowed;
+  }
+  input {
+    cursor: text;
+  }
+  input:disabled {
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="grid-2">
 
-  <input class="col-1 my-2" placeholder="Course filter" bind:value={filterValue} />
+  <input {disabled} class="col-1 my-2" placeholder="Course filter" bind:value={filterValue} />
 
   <select
+    {disabled}
     class="select col-1"
     bind:value={selectedId}
     size={filteredEvents.length < 5 ? 5 : filteredEvents.length + 1}>
