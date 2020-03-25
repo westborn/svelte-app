@@ -5,19 +5,47 @@
 
   const dispatch = createEventDispatcher()
 
-  export let event = {}
   export let formType = ''
+  export let event
+  export let presenters
+  export let venues
+  export let contacts
+  const times = [
+    '08:00',
+    '08:30',
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '12:00',
+    '12:30',
+    '13:00',
+    '13:30',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
+    '17:00'
+  ]
 
   onMount(() => {
+    selectedVenue = venues.findIndex(x => x.name === event.location)
+    selectedPresenter = presenters.findIndex(
+      x => x.name === event.extendedProperties.private.presenter
+    )
+    selectedContact = contacts.findIndex(x => x.name === event.extendedProperties.private.contact)
+    id = event.id
+
     //setup data entry for add/update/remove
     if (formType === 'update') {
-      console.log(event)
+      // console.log(event)
       summary = event.summary
       description = event.description
-      location = event.location
       startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
-      presenter = event.extendedProperties.private.presenter
-      contact = event.extendedProperties.private.contact
       minEnrol = event.extendedProperties.private.min
       maxEnrol = event.extendedProperties.private.max
       cost = event.extendedProperties.private.cost
@@ -36,13 +64,13 @@
   const addNewEvent = () => {
     resultEvent.summary = summary
     resultEvent.description = description
-    resultEvent.location = location
+    resultEvent.location = venues[selectedVenue].name
     resultEvent.isAllDayEvent = true
     resultEvent.startDateTime = startDate
     resultEvent.endDateTime = startDate
     resultEvent.recurrence = recurrence
-    resultEvent.extendedProperties.private.presenter = presenter
-    resultEvent.extendedProperties.private.contact = contact
+    resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
+    resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
     resultEvent.extendedProperties.private.min = minEnrol
     resultEvent.extendedProperties.private.max = maxEnrol
     resultEvent.extendedProperties.private.cost = cost
@@ -50,15 +78,16 @@
   }
 
   const updateEvent = () => {
+    resultEvent.id = id
     resultEvent.summary = summary
     resultEvent.description = description
-    resultEvent.location = location
+    resultEvent.location = venues[selectedVenue].name
     resultEvent.isAllDayEvent = true
     resultEvent.startDateTime = startDate
     resultEvent.endDateTime = startDate
     resultEvent.recurrence = recurrence
-    resultEvent.extendedProperties.private.presenter = presenter
-    resultEvent.extendedProperties.private.contact = contact
+    resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
+    resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
     resultEvent.extendedProperties.private.min = minEnrol
     resultEvent.extendedProperties.private.max = maxEnrol
     resultEvent.extendedProperties.private.cost = cost
@@ -70,14 +99,16 @@
     dispatch('eventRemove', { event: resultEvent })
   }
 
+  let selectedPresenter
+  let selectedVenue
+  let selectedContact
+
   let id = ''
   let summary = ''
   let description = ''
-  let location = ''
   let startDate = ''
+  let selectedTime = ''
   let recurrence = []
-  let contact = ''
-  let presenter = ''
   let minEnrol = ''
   let maxEnrol = ''
   let cost = ''
@@ -116,6 +147,12 @@
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 1rem;
   }
+  .subgrid-2 {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 0rem;
+  }
   .col-1 {
     grid-column-start: 1;
   }
@@ -143,17 +180,29 @@
     </div>
 
     <div class="input-container col-2">
-      <input type="text" bind:value={location} />
+      <select bind:value={selectedVenue}>
+        {#each venues as item (item.id)}
+          <option value={item.id}>{item.name}</option>
+        {/each}
+      </select>
       <label>Location</label>
     </div>
 
-    <div class="input-container col-1">
-      <input type="date" bind:value={startDate} />
-      <label>Start Date</label>
+    <div class="subgrid-2 input-container col-1">
+      <input class="col-1" type="date" bind:value={startDate} />
+      <label>Event Date/Time</label>
+      <select class="col-2" bind:value={selectedTime}>
+        {#each times as item (item)}
+          <option value={item}>{item}</option>
+        {/each}
+      </select>
     </div>
-
     <div class="input-container col-2">
-      <input type="text" bind:value={presenter} />
+      <select bind:value={selectedPresenter}>
+        {#each presenters as item (item.id)}
+          <option value={item.id}>{item.name}</option>
+        {/each}
+      </select>
       <label>Presenter</label>
     </div>
 
@@ -163,12 +212,15 @@
     </div>
 
     <div class="input-container col-2">
-      <input type="text" bind:value={contact} />
+      <select bind:value={selectedContact}>
+        {#each contacts as item (item.id)}
+          <option value={item.id}>{item.name}</option>
+        {/each}
+      </select>
       <label>Contact</label>
     </div>
   </div>
-
-  <div class="inline input-container col-1">
+  <div class="inline input-container">
     <input class="inline" type="text" bind:value={minEnrol} />
     <label>Min/Max/Cost</label>
     <input class="inline" type="text" bind:value={maxEnrol} />

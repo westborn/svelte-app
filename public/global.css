@@ -2,14 +2,14 @@
 
 /* Global Styles */
 :root {
-  --primary-color: #204F6E;
+  --primary-color: #204f6e;
   --dark-color: #333333;
   --light-gray: #bbbbbb;
   --mid-gray: #808080;
-  --light-color: #FAFAFA;
-  --danger-color: #DC3545;
-  --success-color: #28A745;
-  --border-color: #CCCCCC;
+  --light-color: #fafafa;
+  --danger-color: #dc3545;
+  --success-color: #28a745;
+  --border-color: #cccccc;
 }
 
 * {
@@ -296,7 +296,7 @@ textarea {
 .input-container {
   position: relative;
   margin-bottom: 25px;
-  background-color: LIGHTYELLOW;
+  /* background-color: LIGHTYELLOW; */
 }
 
 .input-container label {
@@ -304,10 +304,11 @@ textarea {
   top: 0px;
   left: 0px;
   font-size: 1em;
-  color: var(--light-gray)
+  color: var(--light-gray);
   transition: all 0.5s ease-in-out;
 }
-.input-container input {
+.input-container input,
+textarea {
   border: 0;
   border-bottom: 1px solid #555;
   background: transparent;
@@ -316,6 +317,16 @@ textarea {
   font-size: 16px;
   color: var(--dark-color);
 }
+.input-container select {
+  border: 0;
+  border-bottom: 1px solid #555;
+  background: transparent;
+  width: 100%;
+  padding: 8px 0 5px 0;
+  font-size: 16px;
+  color: var(--dark-color);
+}
+
 .input-container :focus {
   border: none;
   outline: none;
@@ -354,3 +365,4 @@ textarea {
     font-size: 1rem;
   }
 }
+/* ///////////////////////////////////// */

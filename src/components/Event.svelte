@@ -137,7 +137,7 @@
     <p class="col-2">{description}</p>
     <p class="col-1 field-name">Location:</p>
     <p class="col-2">{location}</p>
-    <p class="col-1 field-name">Pesenter:</p>
+    <p class="col-1 field-name">Presenter:</p>
     <p class="col-2">{presenter}</p>
     <p class="col-1 field-name">Contact:</p>
     <p class="col-2">{contact}</p>

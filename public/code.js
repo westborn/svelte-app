@@ -83,6 +83,23 @@ function getColByName(colName, sheet) {
 }
 
 function getList(colName) {
+  var url =
+    'https://docs.google.com/spreadsheets/d/1mIYWQJkGhMZmh6pW7VV11ivjftcNloNlxvOgQ6_21yw/edit#gid=0'
+  ss = SpreadsheetApp.openByUrl(url)
+  var ws = ss.getSheetByName('Options')
+  var values = getColByName(colName, ws)
+  var list = []
+  values.forEach(function(value) {
+    if (value[0] !== '') {
+      list.push(value[0])
+    }
+  })
+  return list
+}
+
+function OLDgetList(colName) {
+  var url =
+    'https://docs.google.com/spreadsheets/d/1mIYWQJkGhMZmh6pW7VV11ivjftcNloNlxvOgQ6_21yw/edit#gid=0'
   ss = SpreadsheetApp.openByUrl(url)
   var ws = ss.getSheetByName('Options')
   var values = getColByName(colName, ws)

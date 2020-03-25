@@ -2,23 +2,26 @@
   import Terms from './components/Terms.svelte'
   import Event from './components/Event.svelte'
   import EventForm from './components/EventForm.svelte'
-  import { EVENTS, TERMS } from './DATA.js'
+  import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
   import { splitDate, fmtDate, dmy } from './utils'
 
-  const LOCAL = false
+  const LOCAL = true
 
-  function populateVenues(venues) {
-    console.log(venues)
+  function populateVenues(data) {
+    data.forEach((item, idx) => venues.push({ id: idx, name: item }))
   }
-  function populatePresenters(presenters) {
-    console.log(presenters)
+  function populatePresenters(data) {
+    data.forEach((item, idx) => presenters.push({ id: idx, name: item }))
   }
-  function populateContacts(contacts) {
-    console.log(contacts)
+  function populateContacts(data) {
+    data.forEach((item, idx) => contacts.push({ id: idx, name: item }))
   }
 
   const doIninitialise = () => {
     if (LOCAL) {
+      populatePresenters(PRESENTERS)
+      populateVenues(VENUES)
+      populateContacts(CONTACTS)
       showDates(TERMS)
       showEvents(EVENTS)
       return
@@ -49,6 +52,11 @@
     initialised = true
   }
 
+  // select box data from spreadsheet
+  let presenters = []
+  let venues = []
+  let contacts = []
+
   // Reactive for term fields
   let terms = []
   let termIndex = 0
@@ -70,6 +78,7 @@
   }
   function createEvent(event) {
     console.log('Ready to Create')
+    console.log(event)
     allowEventdisplay = false
     formType = ''
   }
@@ -80,9 +89,10 @@
     event = events.find(event => event.id === eventId)
   }
   function updateEvent(event) {
+    console.log('Ready to Update')
+    console.log(event)
     formType = ''
     allowEventdisplay = false
-    console.log('Ready to Update')
   }
 
   function remove() {
@@ -91,9 +101,10 @@
     event = events.find(event => event.id === eventId)
   }
   function removeEvent(event) {
+    console.log('Ready to Remove')
+    console.log(event)
     formType = ''
     allowEventdisplay = false
-    console.log('Ready to Remove')
   }
 </script>
 
@@ -142,6 +153,9 @@
         <EventForm
           {formType}
           {event}
+          {presenters}
+          {venues}
+          {contacts}
           on:eventCancel={() => {
             formType = ''
             allowEventdisplay = false
