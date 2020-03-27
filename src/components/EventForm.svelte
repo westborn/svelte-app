@@ -1,7 +1,8 @@
 <script>
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   import { createEventDispatcher } from 'svelte'
   import { ymd } from '../utils'
+  import ModalDayPicker from './ModalDayPicker.svelte'
 
   const dispatch = createEventDispatcher()
 
@@ -33,16 +34,16 @@
   ]
 
   onMount(() => {
-    selectedVenue = venues.findIndex(x => x.name === event.location)
-    selectedPresenter = presenters.findIndex(
-      x => x.name === event.extendedProperties.private.presenter
-    )
-    selectedContact = contacts.findIndex(x => x.name === event.extendedProperties.private.contact)
     id = event.id
 
-    //setup data entry for add/update/remove
+    //setup data entry for update
     if (formType === 'update') {
-      // console.log(event)
+      selectedVenue = venues.findIndex(x => x.name === event.location)
+      selectedPresenter = presenters.findIndex(
+        x => x.name === event.extendedProperties.private.presenter || 0
+      )
+      selectedContact = contacts.findIndex(x => x.name === event.extendedProperties.private.contact)
+
       summary = event.summary
       description = event.description
       startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
@@ -65,10 +66,10 @@
     resultEvent.summary = summary
     resultEvent.description = description
     resultEvent.location = venues[selectedVenue].name
-    resultEvent.isAllDayEvent = true
-    resultEvent.startDateTime = startDate
-    resultEvent.endDateTime = startDate
-    resultEvent.recurrence = recurrence
+    resultEvent.isAllDayEvent = true //TODO
+    resultEvent.startDateTime = startDate //TODO
+    resultEvent.endDateTime = startDate //TODO
+    resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
     resultEvent.extendedProperties.private.min = minEnrol
@@ -78,19 +79,20 @@
   }
 
   const updateEvent = () => {
-    resultEvent.id = id
+    resultEvent = { ...event }
     resultEvent.summary = summary
     resultEvent.description = description
     resultEvent.location = venues[selectedVenue].name
-    resultEvent.isAllDayEvent = true
-    resultEvent.startDateTime = startDate
-    resultEvent.endDateTime = startDate
-    resultEvent.recurrence = recurrence
+    // resultEvent.isAllDayEvent = true //TODO
+    // resultEvent.startDateTime = startDate //TODO
+    // resultEvent.endDateTime = startDate //TODO
+    // resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
     resultEvent.extendedProperties.private.min = minEnrol
     resultEvent.extendedProperties.private.max = maxEnrol
     resultEvent.extendedProperties.private.cost = cost
+    console.log(resultEvent)
     dispatch('eventUpdate', { event: resultEvent })
   }
 
@@ -99,15 +101,16 @@
     dispatch('eventRemove', { event: resultEvent })
   }
 
-  let selectedPresenter
-  let selectedVenue
-  let selectedContact
+  let selectedPresenter = 0
+  let selectedVenue = 0
+  let selectedContact = 0
 
   let id = ''
   let summary = ''
   let description = ''
   let startDate = ''
-  let selectedTime = ''
+  let selectedStartTime = ''
+  let selectedEndTime = ''
   let recurrence = []
   let minEnrol = ''
   let maxEnrol = ''
@@ -138,6 +141,13 @@
       }
     }
   }
+
+  const selectedModal = e => {
+    console.log(e)
+    showDayPicker = false
+  }
+
+  let showDayPicker = false
 </script>
 
 <style>
@@ -147,17 +157,20 @@
     grid-template-columns: repeat(2, 1fr);
     grid-gap: 1rem;
   }
-  .subgrid-2 {
+  .subgrid-3 {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 0rem;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 0.2rem;
   }
   .col-1 {
     grid-column-start: 1;
   }
   .col-2 {
     grid-column-start: 2;
+  }
+  .col-3 {
+    grid-column-start: 3;
   }
   .inline {
     display: inline-block;
@@ -188,10 +201,15 @@
       <label>Location</label>
     </div>
 
-    <div class="subgrid-2 input-container col-1">
+    <div class="subgrid-3 input-container col-1">
       <input class="col-1" type="date" bind:value={startDate} />
-      <label>Event Date/Time</label>
-      <select class="col-2" bind:value={selectedTime}>
+      <label>Event Date / Start Time / End Time</label>
+      <select class="col-2" bind:value={selectedStartTime}>
+        {#each times as item (item)}
+          <option value={item}>{item}</option>
+        {/each}
+      </select>
+      <select class="col-3" bind:value={selectedEndTime}>
         {#each times as item (item)}
           <option value={item}>{item}</option>
         {/each}
@@ -226,6 +244,8 @@
     <input class="inline" type="text" bind:value={maxEnrol} />
     <input class="inline" type="text" bind:value={cost} />
   </div>
+
+  <button on:click={() => (showDayPicker = true)}>show ModalDayPicker</button>
 {/if}
 <br />
 <div class="buttons">
@@ -248,3 +268,10 @@
   </button>
 
 </div>
+
+<!-- ===========================================  Modal for Recurring Editor -->
+{#if showDayPicker}
+  <ModalDayPicker
+    on:cancel={() => (showDayPicker = false)}
+    on:selected={e => selectedModal(e.detail.payload)} />
+{/if}

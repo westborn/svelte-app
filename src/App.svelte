@@ -2,11 +2,13 @@
   import Terms from './components/Terms.svelte'
   import Event from './components/Event.svelte'
   import EventForm from './components/EventForm.svelte'
+
   import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
   import { splitDate, fmtDate, dmy } from './utils'
 
   const LOCAL = true
 
+  // ============================================================================
   function populateVenues(data) {
     data.forEach((item, idx) => venues.push({ id: idx, name: item }))
   }
