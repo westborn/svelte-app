@@ -80,6 +80,24 @@ function getNested(obj, ...args) {
   return args.reduce((obj, level) => obj && obj[level], obj)
 }
 
+const decodeRecurRule = event => {
+  if (event && event.recurrence) {
+    return rrule.RRule.fromString(event.recurrence[0])
+  } else {
+    return ''
+  }
+}
+const decodeRecurText = rule => rule.toText()
+
+const decodeRecurDates = (eventRule, dte) => {
+  const newRule = new rrule.RRule({
+    ...eventRule.origOptions,
+    dtstart: new Date(dte)
+  })
+  const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte))
+  return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
+}
+
 export {
   dmy,
   ymd,
@@ -92,5 +110,8 @@ export {
   addMinutes,
   getUTCDateInfo,
   checkNested,
-  getNested
+  getNested,
+  decodeRecurRule,
+  decodeRecurText,
+  decodeRecurDates
 }

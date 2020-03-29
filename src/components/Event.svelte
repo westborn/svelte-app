@@ -1,26 +1,19 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import { fmtDate, dmy, getNested, checkNested } from '../utils'
+  import {
+    fmtDate,
+    dmy,
+    getNested,
+    checkNested,
+    decodeRecurRule,
+    decodeRecurText,
+    decodeRecurDates
+  } from '../utils'
 
   const dispatch = createEventDispatcher()
 
-  const decodeRecurRule = event => {
-    if (event[0] && event[0].recurrence) {
-      return rrule.RRule.fromString(event[0].recurrence[0])
-    } else {
-      return ''
-    }
-  }
-  const decodeRecurText = rule => rule.toText()
-
-  const decodeRecurDates = (eventRule, event) => {
-    const newRule = new rrule.RRule({
-      ...eventRule.origOptions,
-      dtstart: new Date(event[0].startDateTime)
-    })
-    const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte))
-    return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
-  }
+  export let events = []
+  export let disabled
 
   const resetInputs = event => {
     selectedId = event ? event.id : ''
@@ -45,14 +38,11 @@
         : ''
   }
 
-  export let events = []
+  let selectedId = ''
   $: {
     dispatch('message', { eventId: selectedId })
   }
-  export let disabled
-
   let filterValue = ''
-  let selectedId = ''
 
   let summary = ''
   let description = ''
@@ -70,32 +60,29 @@
       })
     : events
 
-  $: selectedEvent = filteredEvents.filter(event => event.id === selectedId)
+  $: selectedEvent = filteredEvents.find(event => event.id === selectedId)
   $: recurRule = decodeRecurRule(selectedEvent)
   $: recurText = recurRule ? decodeRecurText(recurRule) : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, selectedEvent) : ''
+  $: recurDates = recurRule ? decodeRecurDates(recurRule, selectedEvent.startDateTime) : ''
 
-  $: resetInputs(selectedEvent[0])
+  $: resetInputs(selectedEvent)
 </script>
 
 <style>
-  .grid-2 {
+  .layout {
     display: grid;
+    width: 90%;
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 0rem;
+    gap: 1rem;
   }
+
   .grid-text {
     display: grid;
     grid-template-columns: minmax(0, 7em) 1fr;
-    grid-gap: 0rem;
+    gap: 0rem;
     grid-column-start: 2;
   }
-  .col-1 {
-    grid-column-start: 1;
-  }
-  .col-2 {
-    grid-column-start: 2;
-  }
+
   .field-name {
     color: var(--mid-gray);
   }
@@ -113,9 +100,9 @@
   }
 </style>
 
-<div class="grid-2">
+<div class="layout">
 
-  <input {disabled} class="col-1 my-2" placeholder="Course filter" bind:value={filterValue} />
+  <input {disabled} class="col-1 my-1" placeholder="Course filter" bind:value={filterValue} />
 
   <select
     {disabled}
@@ -145,38 +132,6 @@
     <p class="col-2">{minMaxCost}</p>
     <p class="col-1 field-name">Recurs:</p>
     <p class="col-2">{recurText}</p>
+    <p class="col-1" style="font-size: .8rem">{recurRule}</p>
   </div>
 </div>
-
-<!-- {#if recurRule}
-  <p>Recurrence: {recurrence}</p>
-  <p>Recurring : {recurDates}</p>
-{/if}
-
-<pre>{JSON.stringify(selectedEvent, null, 2)}</pre> -->
-
-<!--
-  <div class="input-container col-2">
-    <input type="text" bind:value={summary} />
-    <label>Summary</label>
-  </div>
-
-  <div class="input-container col-2">
-    <input type="text" bind:value={startDateTime} />
-    <label>Start Date</label>
-  </div>
-
-  <div class="input-container col-2">
-    <textarea bind:value={description} rows="4" />
-    <label>Description</label>
-  </div>
-
-  <div class="input-container col-2">
-    <input type="text" bind:value={location} />
-    <label>Location</label>
-  </div>
-
-  <div class="input-container col-2">
-    <input type="text" bind:value={recurText} />
-    <label>Recurrence</label>
-  </div> -->

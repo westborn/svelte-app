@@ -30,6 +30,8 @@
 </style>
 
 <div class="weekDays-selector">
+  <input type="checkbox" bind:checked={daySelected.sun} id="sun" />
+  <label for="sun">S</label>
   <input type="checkbox" bind:checked={daySelected.mon} id="mon" />
   <label for="mon">M</label>
   <input type="checkbox" bind:checked={daySelected.tue} id="tue" />
@@ -42,6 +44,4 @@
   <label for="fri">F</label>
   <input type="checkbox" bind:checked={daySelected.sat} id="sat" />
   <label for="sat">S</label>
-  <input type="checkbox" bind:checked={daySelected.sun} id="sun" />
-  <label for="sun">S</label>
 </div>

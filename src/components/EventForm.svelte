@@ -1,8 +1,8 @@
 <script>
   import { onMount, tick } from 'svelte'
   import { createEventDispatcher } from 'svelte'
-  import { ymd } from '../utils'
-  import ModalDayPicker from './ModalDayPicker.svelte'
+  import { ymd, decodeRecurRule, decodeRecurText, decodeRecurDates } from '../utils'
+  import RecurForm from './RecurForm.svelte'
 
   const dispatch = createEventDispatcher()
 
@@ -11,6 +11,7 @@
   export let presenters
   export let venues
   export let contacts
+
   const times = [
     '08:00',
     '08:30',
@@ -47,20 +48,12 @@
       summary = event.summary
       description = event.description
       startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
+      recurrence = [...event.recurrence]
       minEnrol = event.extendedProperties.private.min
       maxEnrol = event.extendedProperties.private.max
       cost = event.extendedProperties.private.cost
     }
   })
-
-  const decodeRecurDates = (eventRule, dte) => {
-    const newRule = new rrule.RRule({
-      ...eventRule.origOptions,
-      dtstart: new Date(dte)
-    })
-    const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte))
-    return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
-  }
 
   const addNewEvent = () => {
     resultEvent.summary = summary
@@ -118,6 +111,13 @@
   let minMaxCost = ''
   let valid = true //TODO
 
+  const timestampUTC = (dte, tme) => {
+    if (dte === '') return '2020-03-28T02:00:00.000Z'
+    return '2020-02-28T02:00:00.000Z'
+  }
+
+  $: startDateTime = timestampUTC(startDate, selectedStartTime)
+
   $: recurRule = recurrence[0] ? rrule.RRule.fromString(recurrence[0]) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
   $: recurDates = recurRule ? decodeRecurDates(recurRule, startDate) : ''
@@ -151,30 +151,22 @@
 </script>
 
 <style>
-  .grid-2 {
+  .layout-2col {
     display: grid;
     width: 80%;
     grid-template-columns: repeat(2, 1fr);
-    grid-gap: 1rem;
+    grid-template-rows: repeat(4, auto);
+    gap: 0.4rem;
   }
-  .subgrid-3 {
+  .layout-3col {
     display: grid;
     width: 100%;
     grid-template-columns: repeat(3, 1fr);
-    grid-gap: 0.2rem;
+    grid-gap: 1rem;
   }
-  .col-1 {
-    grid-column-start: 1;
-  }
-  .col-2 {
-    grid-column-start: 2;
-  }
-  .col-3 {
-    grid-column-start: 3;
-  }
-  .inline {
-    display: inline-block;
-    width: 30%;
+
+  .input-field-small {
+    width: 50%;
   }
 </style>
 
@@ -185,23 +177,23 @@
     <span class="bg-danger">{event.summary}</span>
   </h3>
 {:else}
-  <div class="grid-2 mt-3">
+  <div class="layout-2col">
 
-    <div class="input-container col-1">
+    <div class="input-field col-1">
       <input type="text" bind:value={summary} />
       <label>Summary</label>
     </div>
 
-    <div class="input-container col-2">
-      <select bind:value={selectedVenue}>
-        {#each venues as item (item.id)}
+    <div class="input-field col-2">
+      <select bind:value={selectedPresenter}>
+        {#each presenters as item (item.id)}
           <option value={item.id}>{item.name}</option>
         {/each}
       </select>
-      <label>Location</label>
+      <label>Presenter</label>
     </div>
 
-    <div class="subgrid-3 input-container col-1">
+    <div class="layout-3col input-field col-1">
       <input class="col-1" type="date" bind:value={startDate} />
       <label>Event Date / Start Time / End Time</label>
       <select class="col-2" bind:value={selectedStartTime}>
@@ -215,21 +207,8 @@
         {/each}
       </select>
     </div>
-    <div class="input-container col-2">
-      <select bind:value={selectedPresenter}>
-        {#each presenters as item (item.id)}
-          <option value={item.id}>{item.name}</option>
-        {/each}
-      </select>
-      <label>Presenter</label>
-    </div>
 
-    <div class="input-container col-1">
-      <textarea bind:value={description} rows="4" />
-      <label>Description</label>
-    </div>
-
-    <div class="input-container col-2">
+    <div class="input-field col-2">
       <select bind:value={selectedContact}>
         {#each contacts as item (item.id)}
           <option value={item.id}>{item.name}</option>
@@ -237,15 +216,34 @@
       </select>
       <label>Contact</label>
     </div>
-  </div>
-  <div class="inline input-container">
-    <input class="inline" type="text" bind:value={minEnrol} />
-    <label>Min/Max/Cost</label>
-    <input class="inline" type="text" bind:value={maxEnrol} />
-    <input class="inline" type="text" bind:value={cost} />
-  </div>
 
-  <button on:click={() => (showDayPicker = true)}>show ModalDayPicker</button>
+    <div class="input-field col-1">
+      <select bind:value={selectedVenue}>
+        {#each venues as item (item.id)}
+          <option value={item.id}>{item.name}</option>
+        {/each}
+      </select>
+      <label>Location</label>
+    </div>
+
+    <div class="layout-3col input-field input-field-small col-2">
+      <input type="text" bind:value={minEnrol} />
+      <label>Min/Max/Cost</label>
+      <input type="text" bind:value={maxEnrol} />
+      <input type="text" bind:value={cost} />
+    </div>
+
+    <div class="input-field col-1">
+      <textarea bind:value={description} rows="4" />
+      <label>Description</label>
+    </div>
+
+    <div class="col-2">
+      <p>Recurs: {recurText}</p>
+      <button on:click={() => (showDayPicker = true)}>Edit Recurrence Details</button>
+    </div>
+
+  </div>
 {/if}
 <br />
 <div class="buttons">
@@ -271,7 +269,9 @@
 
 <!-- ===========================================  Modal for Recurring Editor -->
 {#if showDayPicker}
-  <ModalDayPicker
+  <RecurForm
+    {recurrence}
+    {startDateTime}
     on:cancel={() => (showDayPicker = false)}
     on:selected={e => selectedModal(e.detail.payload)} />
 {/if}

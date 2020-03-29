@@ -4,18 +4,17 @@
   import EventForm from './components/EventForm.svelte'
 
   import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
-  import { splitDate, fmtDate, dmy } from './utils'
 
   const LOCAL = true
 
   // ============================================================================
-  function populateVenues(data) {
+  const populateVenues = data => {
     data.forEach((item, idx) => venues.push({ id: idx, name: item }))
   }
-  function populatePresenters(data) {
+  const populatePresenters = data => {
     data.forEach((item, idx) => presenters.push({ id: idx, name: item }))
   }
-  function populateContacts(data) {
+  const populateContacts = data => {
     data.forEach((item, idx) => contacts.push({ id: idx, name: item }))
   }
 
@@ -53,6 +52,40 @@
     events = JSON.parse(sheetEvents)
     initialised = true
   }
+  // CRUD functions (calling and returning)
+  const create = () => {
+    formType = 'create'
+    allowEventdisplay = true
+    formEvent = undefined
+  }
+  const createEvent = event => {
+    console.log('Ready to Create')
+    console.log(event)
+    allowEventdisplay = false
+    formType = ''
+  }
+  const update = () => {
+    formType = 'update'
+    allowEventdisplay = true
+    event = events.find(event => event.id === eventId)
+  }
+  const updateEvent = event => {
+    console.log('Ready to Update')
+    console.log(event)
+    formType = ''
+    allowEventdisplay = false
+  }
+  const remove = () => {
+    formType = 'remove'
+    allowEventdisplay = true
+    event = events.find(event => event.id === eventId)
+  }
+  const removeEvent = event => {
+    console.log('Ready to Remove')
+    console.log(event)
+    formType = ''
+    allowEventdisplay = false
+  }
 
   // select box data from spreadsheet
   let presenters = []
@@ -63,6 +96,7 @@
   let terms = []
   let termIndex = 0
 
+  // Reactive for events
   let events = []
   let allowEventdisplay = false
   let event = {}
@@ -70,44 +104,7 @@
   let formEvent = {}
 
   let initialised = false
-
   let formType = ''
-
-  function create() {
-    formType = 'create'
-    allowEventdisplay = true
-    formEvent = undefined
-  }
-  function createEvent(event) {
-    console.log('Ready to Create')
-    console.log(event)
-    allowEventdisplay = false
-    formType = ''
-  }
-
-  function update() {
-    formType = 'update'
-    allowEventdisplay = true
-    event = events.find(event => event.id === eventId)
-  }
-  function updateEvent(event) {
-    console.log('Ready to Update')
-    console.log(event)
-    formType = ''
-    allowEventdisplay = false
-  }
-
-  function remove() {
-    formType = 'remove'
-    allowEventdisplay = true
-    event = events.find(event => event.id === eventId)
-  }
-  function removeEvent(event) {
-    console.log('Ready to Remove')
-    console.log(event)
-    formType = ''
-    allowEventdisplay = false
-  }
 </script>
 
 <style>
@@ -140,7 +137,7 @@
 
     <!-- <p>{`selectedId = ${selectedId}`}</p> -->
 
-    <div class="buttons mt-2">
+    <div class="buttons my-2">
       <button on:click={create} disabled={allowEventdisplay}>Add New Course</button>
       <button on:click={update} disabled={allowEventdisplay || eventId === ''}>
         Update Selected Course
