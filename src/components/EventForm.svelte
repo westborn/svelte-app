@@ -48,7 +48,7 @@
       summary = event.summary
       description = event.description
       startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
-      recurrence = [...event.recurrence]
+      ;[recurrence] = event.recurrence
       minEnrol = event.extendedProperties.private.min
       maxEnrol = event.extendedProperties.private.max
       cost = event.extendedProperties.private.cost
@@ -104,7 +104,7 @@
   let startDate = ''
   let selectedStartTime = ''
   let selectedEndTime = ''
-  let recurrence = []
+  let recurrence = ''
   let minEnrol = ''
   let maxEnrol = ''
   let cost = ''
@@ -118,7 +118,7 @@
 
   $: startDateTime = timestampUTC(startDate, selectedStartTime)
 
-  $: recurRule = recurrence[0] ? rrule.RRule.fromString(recurrence[0]) : ''
+  $: recurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
   $: recurDates = recurRule ? decodeRecurDates(recurRule, startDate) : ''
 

@@ -42,25 +42,75 @@
   }
 
   const selected = () => {
-    // console.log(daySelected)
-    dispatch('selected', { payload: daySelected })
+    console.log(recurOptions)
+    recurOptions.freq = enterFreq
+    recurOptions.byweekday = Object.keys(daysSelected).filter(el => daysSelected[el] === true)
+    recurOptions.count = enterCount
+    recurOptions.interval = enterInterval
+    recurOptions.until = enterUntil
+    dispatch('selected', { payload: recurOptions })
+  }
+
+  const FREQUENCIES = ['YEARLY', 'MONTHLY', 'WEEKLY', 'DAILY', 'HOURLY', 'MINUTELY', 'SECONDLY']
+  const YEARLY = 0
+  const MONTHLY = 1
+  const WEEKLY = 2
+  const DAILY = 3
+  const HOURLY = 4
+  const MINUTELY = 5
+  const SECONDLY = 6
+
+  const Days = {
+    MO: 0,
+    TU: 1,
+    WE: 2,
+    TH: 3,
+    FR: 4,
+    SA: 5,
+    SU: 6
+  }
+  const ALL_WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
+
+  const recurOptions = {
+    freq: null,
+    dtstart: null,
+    interval: null,
+    wkst: null,
+    count: null,
+    until: null,
+    byweekday: null,
+    bymonth: null,
+    bymonthday: null
+  }
+
+  const DEFAULT_OPTIONS = {
+    freq: null,
+    dtstart: null,
+    interval: 1,
+    wkst: 'MO',
+    count: null,
+    until: null,
+    byweekday: null,
+    bymonth: null,
+    bymonthday: null
   }
   let modal
-  let daySelected = {
-    mon: false,
-    tue: false,
-    wed: false,
-    thu: false,
-    fri: false,
-    sat: false,
-    sun: false
+  let daysSelected = {
+    MO: false,
+    TU: false,
+    WE: false,
+    TH: false,
+    FR: false,
+    SA: false,
+    SU: false
   }
-
-  let repeatCount = 0
-  let repeatFreq = ''
+  let enterFreq = 'DAILY'
+  let enterCount = null
+  let enterInterval = null
+  let enterUntil = null
   let repeatEnds = 1
 
-  $: recurRule = recurrence[0] ? rrule.RRule.fromString(recurrence[0]) : ''
+  $: recurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
   $: recurDates = recurRule ? decodeRecurDates(recurRule, ymd(new Date(startDateTime))) : ''
 </script>
@@ -172,17 +222,17 @@
 
   <div class="repeat-div">
     <p>Repeat Every</p>
-    <input type="number" bind:value={repeatCount} min="1" max="15" />
+    <input type="number" bind:value={enterInterval} min="1" max="15" />
 
-    <select bind:value={repeatFreq}>
-      <option value="day">days</option>
-      <option value="week">weeks</option>
-      <option value="month">months</option>
+    <select bind:value={enterFreq}>
+      <option value="DAILY">days</option>
+      <option value="WEEKLY">weeks</option>
+      <option value="MONTHLY">months</option>
     </select>
   </div>
 
   <p class="my-1">Repeat On</p>
-  <WeekDayPicker {daySelected} />
+  <WeekDayPicker {daysSelected} />
 
   <div class="ends-div">
     <p class="lhs">Ends</p>
@@ -215,10 +265,10 @@
     </div>
 
     <div class="date-field rhs3">
-      <input type="date" disabled={repeatEnds !== 2} />
+      <input type="date" disabled={repeatEnds !== 2} bind:value={enterUntil} />
     </div>
     <div class="rhs4">
-      <input type="number" disabled={repeatEnds !== 3} />
+      <input type="number" disabled={repeatEnds !== 3} bind:value={enterInterval} />
       <span>Occurences</span>
     </div>
 
@@ -226,7 +276,7 @@
   <br />
   <hr />
   <p>Recurs: {recurText}</p>
-  <pre>{recurrence[0]}</pre>
+  <pre>{recurrence}</pre>
   <pre>{recurDates}</pre>
   <button on:click={selected}>Add/Change Recurrence</button>
   <button on:click={cancel}>Cancel</button>

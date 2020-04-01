@@ -82,12 +82,15 @@ function getNested(obj, ...args) {
 
 const decodeRecurRule = event => {
   if (event && event.recurrence) {
-    return rrule.RRule.fromString(event.recurrence[0])
+    const [recurrenceString] = event.recurrence
+    return rrule.RRule.fromString(recurrenceString)
   } else {
     return ''
   }
 }
 const decodeRecurText = rule => rule.toText()
+
+const parseRuleText = ruleString => rrule.RRule.parseString(ruleString)
 
 const decodeRecurDates = (eventRule, dte) => {
   const newRule = new rrule.RRule({
@@ -114,5 +117,6 @@ export {
   getNested,
   decodeRecurRule,
   decodeRecurText,
-  decodeRecurDates
+  decodeRecurDates,
+  parseRuleText
 }

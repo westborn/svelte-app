@@ -1,5 +1,5 @@
 <script>
-  export let daySelected
+  export let daysSelected
 </script>
 
 <style>
@@ -30,18 +30,18 @@
 </style>
 
 <div class="weekDays-selector">
-  <input type="checkbox" bind:checked={daySelected.sun} id="sun" />
-  <label for="sun">S</label>
-  <input type="checkbox" bind:checked={daySelected.mon} id="mon" />
-  <label for="mon">M</label>
-  <input type="checkbox" bind:checked={daySelected.tue} id="tue" />
-  <label for="tue">T</label>
-  <input type="checkbox" bind:checked={daySelected.wed} id="wed" />
-  <label for="wed">W</label>
-  <input type="checkbox" bind:checked={daySelected.thu} id="thu" />
-  <label for="thu">T</label>
-  <input type="checkbox" bind:checked={daySelected.fri} id="fri" />
-  <label for="fri">F</label>
-  <input type="checkbox" bind:checked={daySelected.sat} id="sat" />
-  <label for="sat">S</label>
+  <input type="checkbox" bind:checked={daysSelected.SU} id="SU" />
+  <label for="SU">S</label>
+  <input type="checkbox" bind:checked={daysSelected.MO} id="MO" />
+  <label for="MO">M</label>
+  <input type="checkbox" bind:checked={daysSelected.TU} id="TU" />
+  <label for="TU">T</label>
+  <input type="checkbox" bind:checked={daysSelected.WE} id="WE" />
+  <label for="WE">W</label>
+  <input type="checkbox" bind:checked={daysSelected.TH} id="TH" />
+  <label for="TH">T</label>
+  <input type="checkbox" bind:checked={daysSelected.FR} id="FR" />
+  <label for="FR">F</label>
+  <input type="checkbox" bind:checked={daysSelected.SA} id="SA" />
+  <label for="SA">S</label>
 </div>

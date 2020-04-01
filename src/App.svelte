@@ -3,6 +3,8 @@
   import Event from './components/Event.svelte'
   import EventForm from './components/EventForm.svelte'
 
+  import { parseRuleText } from './utils'
+
   import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
 
   const LOCAL = true
@@ -105,6 +107,27 @@
 
   let initialised = false
   let formType = ''
+
+  let test = null
+
+  // $: test =
+  //   selectedEvent && selectedEvent.recurrence
+  //     ? rrule.RRule.parseString(selectedEvent.recurrence)
+  //     : null
+  //
+  // $: test = selectedEvent
+  //   ? selectedEvent.recurrence.length > 0
+  //     ? rrule.RRule.parseString(selectedEvent.recurrence)
+  //     : 'empty'
+  //   : 'not there'
+  // let test = recurrence !== '' ? rrule.RRule.parseString(recurrence) : ''
+  // let test = new rrule.RRule({
+  //   freq: rrule.RRule.WEEKLY,
+  //   // interval: 0,
+  //   byweekday: [rrule.RRule.MO, rrule.RRule.FR],
+  //   dtstart: new Date(Date.UTC(2012, 1, 1, 10, 30)),
+  //   until: new Date(Date.UTC(2012, 12, 31))
+  // }).toText()
 </script>
 
 <style>
@@ -126,11 +149,13 @@
       {terms}
       disabled={allowEventdisplay} />
 
-    <p>{`eventId = ${eventId}`}</p>
+    <p>{`App: eventId = ${eventId}`}</p>
 
     <Event
       on:message={e => {
         eventId = e.detail.eventId
+        const [test2] = events && eventId ? events.find(event => event.id === eventId).recurrence : null
+        test = test2 ? parseRuleText(test2) : null
       }}
       {events}
       disabled={allowEventdisplay} />
@@ -175,4 +200,6 @@
   {:else}
     <button on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
+  <pre>{JSON.stringify(test, null, 2)}</pre>
+
 </div>

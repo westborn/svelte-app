@@ -13,7 +13,8 @@
     startDateTime = event ? fmtDate(event.startDateTime) : ''
     description = event ? event.description : ''
     location = event ? event.location : ''
-    recurrence = event && event.recurrence[0] ? event.recurrence[0] : ''
+    //destructure first element from recurrence array on the event
+    ;[recurrence] = event && event.recurrence.length > 0 ? event.recurrence : ''
     contact = checkNested(event, 'extendedProperties', 'private', 'contact')
       ? getNested(event, 'extendedProperties', 'private', 'contact')
       : ''
@@ -40,19 +41,10 @@
   let description = ''
   let location = ''
   let startDateTime = ''
-  let recurrence = []
+  let recurrence = ''
   let contact = ''
   let presenter = ''
   let minMaxCost = ''
-
-  let test = rrule.RRule.parseString('RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200411T000000Z;BYDAY=SU')
-  // let test = new rrule.RRule({
-  //   freq: rrule.RRule.WEEKLY,
-  //   // interval: 0,
-  //   byweekday: [rrule.RRule.MO, rrule.RRule.FR],
-  //   dtstart: new Date(Date.UTC(2012, 1, 1, 10, 30)),
-  //   until: new Date(Date.UTC(2012, 12, 31))
-  // }).toText()
 
   $: filteredEvents = filterValue
     ? events.filter(event => {
@@ -135,4 +127,4 @@
     <p class="col-1" style="font-size: .8rem">{recurRule}</p>
   </div>
 </div>
-<pre>{JSON.stringify(test, null, 2)}</pre>
+<!-- <pre>{JSON.stringify(selectedEvent, null, 2)}</pre> -->
