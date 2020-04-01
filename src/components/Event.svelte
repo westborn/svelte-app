@@ -1,14 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import {
-    fmtDate,
-    dmy,
-    getNested,
-    checkNested,
-    decodeRecurRule,
-    decodeRecurText,
-    decodeRecurDates
-  } from '../utils'
+  import { fmtDate, dmy, getNested, checkNested, decodeRecurRule, decodeRecurText } from '../utils'
 
   const dispatch = createEventDispatcher()
 
@@ -53,6 +45,15 @@
   let presenter = ''
   let minMaxCost = ''
 
+  let test = rrule.RRule.parseString('RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200411T000000Z;BYDAY=SU')
+  // let test = new rrule.RRule({
+  //   freq: rrule.RRule.WEEKLY,
+  //   // interval: 0,
+  //   byweekday: [rrule.RRule.MO, rrule.RRule.FR],
+  //   dtstart: new Date(Date.UTC(2012, 1, 1, 10, 30)),
+  //   until: new Date(Date.UTC(2012, 12, 31))
+  // }).toText()
+
   $: filteredEvents = filterValue
     ? events.filter(event => {
         const eventLine = `${fmtDate(event.startDateTime)} - ${event.summary}`
@@ -63,7 +64,6 @@
   $: selectedEvent = filteredEvents.find(event => event.id === selectedId)
   $: recurRule = decodeRecurRule(selectedEvent)
   $: recurText = recurRule ? decodeRecurText(recurRule) : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, selectedEvent.startDateTime) : ''
 
   $: resetInputs(selectedEvent)
 </script>
@@ -135,3 +135,4 @@
     <p class="col-1" style="font-size: .8rem">{recurRule}</p>
   </div>
 </div>
+<pre>{JSON.stringify(test, null, 2)}</pre>

@@ -72,19 +72,19 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
   }
   .modal {
     position: absolute;
     left: 50%;
     top: 50%;
     width: calc(100vw - 2em);
-    max-width: 32em;
+    max-width: 26em;
     max-height: calc(100vh - 2em);
-    overflow: auto;
+    overflow: hidden;
     transform: translate(-50%, -50%);
     padding: 1em;
-    border-radius: 0.2em;
+    border-radius: 1em;
     background: var(--light-color);
   }
   button {
@@ -160,11 +160,6 @@
     border-bottom: 1px solid #555;
     background: transparent;
     width: 50px;
-    color: var(--dark-color);
-  }
-  .date-field select {
-    border: 0;
-    width: 200px;
     color: var(--dark-color);
   }
 </style>

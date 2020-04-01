@@ -94,7 +94,8 @@ const decodeRecurDates = (eventRule, dte) => {
     ...eventRule.origOptions,
     dtstart: new Date(dte)
   })
-  const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte))
+  // just return dd-mmm (max 5)
+  const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte).slice(0, 6))
   return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
 }
 
