@@ -131,9 +131,6 @@
 </script>
 
 <style>
-  button {
-    cursor: pointer;
-  }
   button:disabled {
     cursor: not-allowed;
   }
@@ -162,12 +159,12 @@
 
     <!-- <p>{`selectedId = ${selectedId}`}</p> -->
 
-    <div class="buttons my-2">
-      <button on:click={create} disabled={allowEventdisplay}>Add New Course</button>
-      <button on:click={update} disabled={allowEventdisplay || eventId === ''}>
+    <div class="my-2">
+      <button class="btn" on:click={create} disabled={allowEventdisplay}>Add New Course</button>
+      <button class="btn" on:click={update} disabled={allowEventdisplay || eventId === ''}>
         Update Selected Course
       </button>
-      <button on:click={remove} disabled={allowEventdisplay || eventId === ''}>
+      <button class="btn" on:click={remove} disabled={allowEventdisplay || eventId === ''}>
         Delete Selected Course
       </button>
     </div>
@@ -198,7 +195,7 @@
     <!-- <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre> -->
     <!-- <pre>{JSON.stringify(events.filter(event => event.id === eventId), null, 2)}</pre> -->
   {:else}
-    <button on:click={doIninitialise} disabled={initialised}>Go</button>
+    <button class="btn" on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
   <pre>{JSON.stringify(test, null, 2)}</pre>
 

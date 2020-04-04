@@ -93,6 +93,7 @@ const decodeRecurText = rule => rule.toText()
 const parseRuleText = ruleString => rrule.RRule.parseString(ruleString)
 
 const decodeRecurDates = (eventRule, dte) => {
+  // console.log(`decodeDates: ${JSON.stringify(eventRule, null, 2)}`)
   const newRule = new rrule.RRule({
     ...eventRule.origOptions,
     dtstart: new Date(dte)
@@ -100,6 +101,14 @@ const decodeRecurDates = (eventRule, dte) => {
   // just return dd-mmm (max 5)
   const futureDates = newRule.all((date, i) => i < 6).map(dte => dmy(dte).slice(0, 6))
   return `${futureDates.join(', ')}${futureDates.length > 5 ? '...' : ''}`
+}
+
+const validateRule = options => {
+  // console.log(`validateRule1: ${JSON.stringify(options, null, 2)}`)
+  // console.log(rrule.RRule.DAILY)
+  // const newRule = new rrule.RRule({ ...options }, { wkst: { weekday: 6 } })
+  const newRule = new rrule.RRule(options)
+  return { ruleText: newRule.toText(), ruleString: newRule.toString() }
 }
 
 export {
@@ -118,5 +127,6 @@ export {
   decodeRecurRule,
   decodeRecurText,
   decodeRecurDates,
-  parseRuleText
+  parseRuleText,
+  validateRule
 }

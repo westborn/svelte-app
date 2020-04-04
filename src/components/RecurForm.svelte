@@ -1,9 +1,22 @@
 <script>
-  import { createEventDispatcher, onDestroy } from 'svelte'
+  import { onMount, createEventDispatcher, onDestroy } from 'svelte'
   import WeekDayPicker from './WeekDayPicker.svelte'
-  import { ymd, decodeRecurRule, decodeRecurText, decodeRecurDates } from '../utils'
+  import {
+    ymd,
+    decodeRecurRule,
+    decodeRecurText,
+    decodeRecurDates,
+    validateRule,
+    parseRuleText
+  } from '../utils'
 
   export let recurrence
+  $: currentRecurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
+  $: currentRecurText = currentRecurRule ? currentRecurRule.toText() : ''
+  $: currentRecurDates = currentRecurRule
+    ? decodeRecurDates(currentRecurRule, ymd(new Date(startDateTime)))
+    : ''
+
   export let startDateTime
 
   const dispatch = createEventDispatcher()
@@ -11,56 +24,135 @@
     dispatch('cancel')
   }
 
-  const handle_keydown = e => {
-    if (e.key === 'Escape') {
-      close()
-      return
+  onMount(() => {
+    console.log(`mount1: ${JSON.stringify(startDateTime, null, 2)}`)
+    recurOptions =
+      (recurrence === null) | (recurrence === '')
+        ? { ...DEFAULT_OPTIONS }
+        : { ...parseRuleText(recurrence) }
+    delete recurOptions.wkst
+    console.log(`mount2: ${JSON.stringify(recurOptions, null, 2)}`)
+    enterCount = null
+    enterInterval = null
+    enterUntil = null
+    repeatEnds = 1
+    if (recurOptions.freq === null) {
+      repeatEnds = 1
+      enterFreq = '0'
+      enterCount = null
+      enterInterval = null
+      enterUntil = null
+    }
+    // decode byweekday if it has come from RRule
+    if (recurOptions.byweekday) {
+      const tmp = recurOptions.byweekday.map(el => el.weekday)
+      recurOptions.byweekday = [...tmp]
     }
 
-    if (e.key === 'Tab') {
-      // trap focus
-      const nodes = modal.querySelectorAll('*')
-      const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0)
-
-      let index = tabbable.indexOf(document.activeElement)
-      if (index === -1 && e.shiftKey) index = 0
-
-      index += tabbable.length + (e.shiftKey ? -1 : 1)
-      index %= tabbable.length
-
-      tabbable[index].focus()
-      e.preventDefault()
+    enterFreq = recurOptions.freq ? String(FREQUENCIES[recurOptions.freq]) : '0'
+    console.log(enterFreq)
+    if (recurOptions.until) {
+      enterUntil = recurOptions.until.toISOString().slice(0, 10)
+      repeatEnds = 2
     }
+    if (recurOptions.count) {
+      enterCount = recurOptions.count
+      repeatEnds = 3
+    }
+    console.log(`mount3: ${JSON.stringify(recurOptions, null, 2)}`)
+  })
+  // const handle_keydown = e => {
+  //   if (e.key === 'Escape') {
+  //     close()
+  //     return
+  //   }
+
+  //   if (e.key === 'Tab') {
+  //     // trap focus
+  //     const nodes = modal.querySelectorAll('*')
+  //     const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0)
+
+  //     let index = tabbable.indexOf(document.activeElement)
+  //     if (index === -1 && e.shiftKey) index = 0
+
+  //     index += tabbable.length + (e.shiftKey ? -1 : 1)
+  //     index %= tabbable.length
+
+  //     tabbable[index].focus()
+  //     e.preventDefault()
+  //   }
+  // }
+
+  // const previously_focused = typeof document !== 'undefined' && document.activeElement
+
+  // if (previously_focused) {
+  //   onDestroy(() => {
+  //     previously_focused.focus()
+  //   })
+  // }
+
+  const handleEndsChange = e => {
+    if (repeatEnds != 2) enterUntil = null
+    if (repeatEnds != 3) enterCount = null
   }
 
-  const previously_focused = typeof document !== 'undefined' && document.activeElement
+  const validate = () => {
+    valid = false
+    console.log(`B4 Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
+    if (enterFreq === '0') {
+      errorMsg = 'Frequency MUST be selected'
+      return
+    }
+    recurOptions.freq = Number(enterFreq)
+    if (enterInterval === null) enterInterval = 1
 
-  if (previously_focused) {
-    onDestroy(() => {
-      previously_focused.focus()
+    if (repeatEnds === 1) {
+      enterCount = null
+      enterUntil = null
+    }
+    if (repeatEnds != 2) enterUntil = null
+    if (repeatEnds != 3) enterCount = null
+
+    recurOptions.byweekday = Object.keys(daysSelected)
+      .filter(el => daysSelected[el] === true)
+      .map(el => ALL_WEEKDAYS.indexOf(el))
+    recurOptions.count = enterCount
+    recurOptions.interval = enterInterval
+    recurOptions.until = enterUntil === null ? null : new Date(enterUntil)
+    // remove keys that are null or have empty arrays
+    const selectedOptions = { ...recurOptions }
+    Object.keys(recurOptions).map(el => {
+      // console.log(
+      //   `${recurOptions[el]}: type: ${typeof recurOptions[el]} - ${recurOptions[el] instanceof
+      //     Array}`
+      // )
+      if (
+        (recurOptions[el] instanceof Array && recurOptions[el].length === 0) ||
+        recurOptions[el] === null
+      ) {
+        delete selectedOptions[el]
+      }
     })
+    console.log(`Aft Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
+    console.log(`valid in: ${JSON.stringify(selectedOptions, null, 2)}`)
+    const { ruleText, ruleString } = validateRule(selectedOptions)
+    console.log(`valid out ruleText: ${JSON.stringify(ruleText, null, 2)}`)
+    console.log(`valid out ruleString: ${JSON.stringify(ruleString, null, 2)}`)
+
+    newRecurrence = ruleString
+    valid = true
+    return selectedOptions
   }
 
   const selected = () => {
-    console.log(recurOptions)
-    recurOptions.freq = enterFreq
-    recurOptions.byweekday = Object.keys(daysSelected).filter(el => daysSelected[el] === true)
-    recurOptions.count = enterCount
-    recurOptions.interval = enterInterval
-    recurOptions.until = enterUntil
-    dispatch('selected', { payload: recurOptions })
+    const { selectedOptions } = validate()
+    if (valid) {
+      dispatch('selected', { payload: selectedOptions })
+    }
   }
 
   const FREQUENCIES = ['YEARLY', 'MONTHLY', 'WEEKLY', 'DAILY', 'HOURLY', 'MINUTELY', 'SECONDLY']
-  const YEARLY = 0
-  const MONTHLY = 1
-  const WEEKLY = 2
-  const DAILY = 3
-  const HOURLY = 4
-  const MINUTELY = 5
-  const SECONDLY = 6
-
-  const Days = {
+  const DAYS = {
     MO: 0,
     TU: 1,
     WE: 2,
@@ -71,7 +163,7 @@
   }
   const ALL_WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
 
-  const recurOptions = {
+  let recurOptions = {
     freq: null,
     dtstart: null,
     interval: null,
@@ -86,8 +178,8 @@
   const DEFAULT_OPTIONS = {
     freq: null,
     dtstart: null,
-    interval: 1,
-    wkst: 'MO',
+    interval: null,
+    wkst: null,
     count: null,
     until: null,
     byweekday: null,
@@ -104,15 +196,23 @@
     SA: false,
     SU: false
   }
-  let enterFreq = 'DAILY'
-  let enterCount = null
-  let enterInterval = null
-  let enterUntil = null
-  let repeatEnds = 1
 
-  $: recurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
-  $: recurText = recurRule ? recurRule.toText() : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, ymd(new Date(startDateTime))) : ''
+  let valid = true
+  let errorMsg = ''
+
+  let enterFreq
+  let enterCount
+  let enterInterval
+  let enterUntil
+  let repeatEnds
+
+  let newRecurrence
+
+  $: newRecurRule = newRecurrence ? rrule.RRule.fromString(newRecurrence) : ''
+  $: newRecurText = newRecurRule ? newRecurRule.toText() : ''
+  $: newRecurDates = newRecurRule
+    ? decodeRecurDates(newRecurRule, ymd(new Date(startDateTime)))
+    : ''
 </script>
 
 <style>
@@ -129,7 +229,7 @@
     left: 50%;
     top: 50%;
     width: calc(100vw - 2em);
-    max-width: 26em;
+    max-width: 30em;
     max-height: calc(100vh - 2em);
     overflow: hidden;
     transform: translate(-50%, -50%);
@@ -137,9 +237,7 @@
     border-radius: 1em;
     background: var(--light-color);
   }
-  button {
-    display: block;
-  }
+
   p {
     color: var(--light-gray);
     font-size: 1em;
@@ -214,7 +312,7 @@
   }
 </style>
 
-<svelte:window on:keydown={handle_keydown} />
+<!-- <svelte:window on:keydown={handle_keydown} /> -->
 
 <div class="modal-background" />
 
@@ -225,9 +323,10 @@
     <input type="number" bind:value={enterInterval} min="1" max="15" />
 
     <select bind:value={enterFreq}>
-      <option value="DAILY">days</option>
-      <option value="WEEKLY">weeks</option>
-      <option value="MONTHLY">months</option>
+      <option value="0" disabled>period?</option>
+      <option value="3">days</option>
+      <option value="2">weeks</option>
+      <option value="1">months</option>
     </select>
   </div>
 
@@ -237,7 +336,12 @@
   <div class="ends-div">
     <p class="lhs">Ends</p>
     <div class="lhs">
-      <input id="one" type="radio" bind:group={repeatEnds} value={1} />
+      <input
+        id="one"
+        type="radio"
+        bind:group={repeatEnds}
+        on:change={e => handleEndsChange(e)}
+        value={1} />
       <label for="one">
         <span>
           <span />
@@ -246,7 +350,12 @@
       </label>
     </div>
     <div class="lhs">
-      <input id="two" type="radio" bind:group={repeatEnds} value={2} />
+      <input
+        id="two"
+        type="radio"
+        bind:group={repeatEnds}
+        on:change={e => handleEndsChange(e)}
+        value={2} />
       <label for="two">
         <span>
           <span />
@@ -255,7 +364,12 @@
       </label>
     </div>
     <div class="lhs">
-      <input id="three" type="radio" bind:group={repeatEnds} value={3} />
+      <input
+        id="three"
+        type="radio"
+        bind:group={repeatEnds}
+        on:change={e => handleEndsChange(e)}
+        value={3} />
       <label for="three">
         <span>
           <span />
@@ -268,16 +382,24 @@
       <input type="date" disabled={repeatEnds !== 2} bind:value={enterUntil} />
     </div>
     <div class="rhs4">
-      <input type="number" disabled={repeatEnds !== 3} bind:value={enterInterval} />
+      <input type="number" disabled={repeatEnds !== 3} bind:value={enterCount} />
       <span>Occurences</span>
     </div>
 
   </div>
   <br />
   <hr />
-  <p>Recurs: {recurText}</p>
+  <p>Currently Recurs: {currentRecurText}</p>
+  <p>Updated Recurence: {newRecurText}</p>
   <pre>{recurrence}</pre>
-  <pre>{recurDates}</pre>
-  <button on:click={selected}>Add/Change Recurrence</button>
-  <button on:click={cancel}>Cancel</button>
+  <pre>{currentRecurDates}</pre>
+  {#if !valid}
+    <pre>{errorMsg}</pre>
+  {:else}
+    <pre>{newRecurrence}</pre>
+    <pre>{newRecurDates}</pre>
+  {/if}
+  <button class="btn" on:click={() => validate()}>Apply Recurrence</button>
+  <button class="btn" on:click={() => selected()}>Add/Change Recurrence</button>
+  <button class="btn" on:click={cancel}>Cancel</button>
 </div>

@@ -37,13 +37,18 @@
   onMount(() => {
     id = event.id
 
-    //setup data entry for update
     if (formType === 'update') {
-      selectedVenue = venues.findIndex(x => x.name === event.location)
+      // if these select boxers are not recognized default to 0
+      selectedVenue = venues.findIndex(x => x.name === event.location || 0)
       selectedPresenter = presenters.findIndex(
         x => x.name === event.extendedProperties.private.presenter || 0
       )
-      selectedContact = contacts.findIndex(x => x.name === event.extendedProperties.private.contact)
+      selectedContact = contacts.findIndex(
+        x => x.name === event.extendedProperties.private.contact || 0
+      )
+      if (selectedVenue === -1) selectedVenue = 0
+      if (selectedPresenter === -1) selectedPresenter = 0
+      if (selectedContact === -1) selectedContact = 0
 
       summary = event.summary
       description = event.description
@@ -52,6 +57,9 @@
       minEnrol = event.extendedProperties.private.min
       maxEnrol = event.extendedProperties.private.max
       cost = event.extendedProperties.private.cost
+    }
+    if (formType === 'create') {
+      startDate = ymd(new Date())
     }
   })
 
@@ -68,6 +76,7 @@
     resultEvent.extendedProperties.private.min = minEnrol
     resultEvent.extendedProperties.private.max = maxEnrol
     resultEvent.extendedProperties.private.cost = cost
+    console.log(resultEvent)
     dispatch('eventCreate', { event: resultEvent })
   }
 
@@ -112,8 +121,9 @@
   let valid = true //TODO
 
   const timestampUTC = (dte, tme) => {
-    if (dte === '') return '2020-03-28T02:00:00.000Z'
-    return '2020-02-28T02:00:00.000Z'
+    //TODO - workout how to include time
+    if (dte === '') return new Date().toISOString()
+    return new Date(dte).toISOString()
   }
 
   $: startDateTime = timestampUTC(startDate, selectedStartTime)
@@ -144,10 +154,10 @@
 
   const selectedModal = e => {
     console.log(e)
-    showDayPicker = false
+    showRecurPicker = false
   }
 
-  let showDayPicker = false
+  let showRecurPicker = false
 </script>
 
 <style>
@@ -240,24 +250,32 @@
 
     <div class="col-2">
       <p>Recurs: {recurText}</p>
-      <button on:click={() => (showDayPicker = true)}>Edit Recurrence Details</button>
+      <button
+        class="btn"
+        on:click={() => {
+          console.log(`Modal: startDateTime: ${startDateTime}`)
+          showRecurPicker = true
+        }}>
+        Edit Recurrence Details
+      </button>
     </div>
 
   </div>
 {/if}
 <br />
-<div class="buttons">
+<div>
   {#if formType === 'create'}
-    <button on:click={addNewEvent} disabled={!valid}>Add New Event</button>
+    <button class="btn" on:click={addNewEvent} disabled={!valid}>Add New Event</button>
   {:else if formType === 'update'}
-    <button on:click={updateEvent} disabled={!valid}>Update Event</button>
+    <button class="btn" on:click={updateEvent} disabled={!valid}>Update Event</button>
   {:else if formType === 'remove'}
-    <button on:click={removeEvent} disabled={!valid}>Delete Event</button>
+    <button class="btn" on:click={removeEvent} disabled={!valid}>Delete Event</button>
   {:else}
     <p>Nothing to do</p>
   {/if}
 
   <button
+    class="btn"
     on:click={() => {
       console.log('Cancelled')
       dispatch('eventCancel')
@@ -268,10 +286,10 @@
 </div>
 
 <!-- ===========================================  Modal for Recurring Editor -->
-{#if showDayPicker}
+{#if showRecurPicker}
   <RecurForm
     {recurrence}
     {startDateTime}
-    on:cancel={() => (showDayPicker = false)}
+    on:cancel={() => (showRecurPicker = false)}
     on:selected={e => selectedModal(e.detail.payload)} />
 {/if}

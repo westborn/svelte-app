@@ -13,6 +13,7 @@ const EVENTS =
 // '[{"id":"eub8d8b6vqudq3mlsr1dui0a5e","summary":"recurring friday for 6 - then changed (2)","description":"And again, the description  for the mone that was changed and probabl;y created a new event ","location":"","isAllDayEvent":false,"startDateTime":"2020-04-05T03:00:00.000Z","endDateTime":"2020-04-05T05:00:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200411;BYDAY=SU"],"extendedProperties":{}},{"id":"4g02lnb2kdhaa7646fpb3p767c","summary":"2 Day recurring twice","description":"And again, the description for this one is longe but not too long ","location":"","isAllDayEvent":false,"startDateTime":"2020-03-29T04:30:00.000Z","endDateTime":"2020-03-30T05:00:00.000Z","recurrence":["RRULE:FREQ=DAILY;COUNT=2"],"extendedProperties":{}},{"id":"07rafrh9t0pdv74bgoqlle1qtv","summary":"3 Day event","description":"And again, the description  for 3 days and good ones they are! ","location":"","isAllDayEvent":true,"startDateTime":"2020-03-29T00:00:00.000Z","endDateTime":"2020-04-01T00:00:00.000Z","recurrence":"","extendedProperties":{}},{"id":"7rk2brfnhrnkgoasamufessnlr","summary":"recurring friday for 6 - then changed (2)","description":"And again, the description for mthe not changed one maybe? ","location":"","isAllDayEvent":false,"startDateTime":"2020-03-28T02:00:00.000Z","endDateTime":"2020-03-28T04:00:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200403T125959Z;BYDAY=SA"],"extendedProperties":{}},{"id":"57gmlslrbb3jfu8bhm1n58hv8m","summary":"all day ","description":"And again, the description for the samll allday event ","location":"","isAllDayEvent":true,"startDateTime":"2020-03-27T00:00:00.000Z","endDateTime":"2020-03-28T00:00:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200328;BYDAY=FR"],"extendedProperties":{}},{"id":"4oi1g8tdsifp86igfbh1jrh27l","summary":"all dat recurs forever","description":"And again, the description for Thanks...Georgehsi one is very long and takes a long time to type and shpould wrap tpo multiple line before it ghets tired ","location":"","isAllDayEvent":true,"startDateTime":"2020-03-26T00:00:00.000Z","endDateTime":"2020-03-27T00:00:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;BYDAY=TH"],"extendedProperties":{}},{"id":"4mrpkb371vlok7i7gpau03mqf4","summary":"Singel Event","description":"And again, the description OF THEW SINGLE ","location":"Bermagui NSW 2546, Australia","isAllDayEvent":false,"startDateTime":"2020-03-24T04:00:00.000Z","endDateTime":"2020-03-24T05:00:00.000Z","recurrence":"","extendedProperties":{}},{"id":"23tg59j6lbcvkdg2f0d3iqdme1","summary":"ALL Day","description":"And again, the description of the all dAY ","location":"","isAllDayEvent":true,"startDateTime":"2020-03-23T00:00:00.000Z","endDateTime":"2020-03-24T00:00:00.000Z","recurrence":"","extendedProperties":{}},{"id":"7erkoqu4rep4semogm80u3bd1g","summary":"Recur 5 18-Mar","description":"And again, the description","location":"Londo","isAllDayEvent":false,"startDateTime":"2020-03-17T23:00:00.000Z","endDateTime":"2020-03-17T23:30:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20200415T135959Z;BYDAY=WE"],"extendedProperties":{}},{"id":"3n6k5ch4154782p6998nimkh0o","summary":"Computers for Dummys (5)","description":"The description of the dummies","location":"Bermagui NSW 2546, Australia","isAllDayEvent":false,"startDateTime":"2020-03-16T23:00:00.000Z","endDateTime":"2020-03-17T01:00:00.000Z","recurrence":["RRULE:FREQ=WEEKLY;WKST=SU;COUNT=2;BYDAY=SU,TU"],"extendedProperties":{}}]'
 
 const CONTACTS = [
+  'Unknown',
   'Ashley Fuller',
   'Bruce Leaver',
   'Chris Mason',
@@ -37,6 +38,7 @@ const CONTACTS = [
 ]
 
 const VENUES = [
+  'Unknown',
   'Bermagui',
   'Bermagui Country Club Auditorium, Bermagui',
   'Bermagui Country Club, Bermagui',
@@ -59,6 +61,7 @@ const VENUES = [
 ]
 
 const PRESENTERS = [
+  'Unknown',
   'Ang Clements',
   'Ashley Fuller',
   'Barry Virtue',
