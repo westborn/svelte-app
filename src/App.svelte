@@ -133,6 +133,7 @@
 <style>
   button:disabled {
     cursor: not-allowed;
+    color: rgba(0, 0, 0, 0.2);
   }
 </style>
 

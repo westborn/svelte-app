@@ -25,32 +25,42 @@
   }
 
   onMount(() => {
-    console.log(`mount1: ${JSON.stringify(startDateTime, null, 2)}`)
-    recurOptions =
-      (recurrence === null) | (recurrence === '')
-        ? { ...DEFAULT_OPTIONS }
-        : { ...parseRuleText(recurrence) }
+    // console.log(`mount1: ${JSON.stringify(recurrence, null, 2)}`)
+    recurOptions = !recurrence ? { ...DEFAULT_OPTIONS } : { ...parseRuleText(recurrence) }
     delete recurOptions.wkst
-    console.log(`mount2: ${JSON.stringify(recurOptions, null, 2)}`)
+    // console.log(`mount2: ${JSON.stringify(recurOptions, null, 2)}`)
     enterCount = null
     enterInterval = null
     enterUntil = null
     repeatEnds = 1
+
     if (recurOptions.freq === null) {
       repeatEnds = 1
       enterFreq = '0'
       enterCount = null
       enterInterval = null
       enterUntil = null
+      return
+    } else {
+      // console.log(`mount int: ${JSON.stringify(recurOptions.interval, null, 2)}`)
+      if (!recurOptions.interval || recurOptions.interval < 1) {
+        recurOptions.interval = 1
+      }
     }
+    enterFreq = String(recurOptions.freq)
+
+    enterInterval = recurOptions.interval
+
     // decode byweekday if it has come from RRule
     if (recurOptions.byweekday) {
       const tmp = recurOptions.byweekday.map(el => el.weekday)
       recurOptions.byweekday = [...tmp]
     }
+    // now populate the data entry for days of the week
+    recurOptions.byweekday.map(el => {
+      daysSelected[ALL_WEEKDAYS[el]] = true
+    })
 
-    enterFreq = recurOptions.freq ? String(FREQUENCIES[recurOptions.freq]) : '0'
-    console.log(enterFreq)
     if (recurOptions.until) {
       enterUntil = recurOptions.until.toISOString().slice(0, 10)
       repeatEnds = 2
@@ -59,37 +69,8 @@
       enterCount = recurOptions.count
       repeatEnds = 3
     }
-    console.log(`mount3: ${JSON.stringify(recurOptions, null, 2)}`)
+    // console.log(`mount3: ${JSON.stringify(recurOptions, null, 2)}`)
   })
-  // const handle_keydown = e => {
-  //   if (e.key === 'Escape') {
-  //     close()
-  //     return
-  //   }
-
-  //   if (e.key === 'Tab') {
-  //     // trap focus
-  //     const nodes = modal.querySelectorAll('*')
-  //     const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0)
-
-  //     let index = tabbable.indexOf(document.activeElement)
-  //     if (index === -1 && e.shiftKey) index = 0
-
-  //     index += tabbable.length + (e.shiftKey ? -1 : 1)
-  //     index %= tabbable.length
-
-  //     tabbable[index].focus()
-  //     e.preventDefault()
-  //   }
-  // }
-
-  // const previously_focused = typeof document !== 'undefined' && document.activeElement
-
-  // if (previously_focused) {
-  //   onDestroy(() => {
-  //     previously_focused.focus()
-  //   })
-  // }
 
   const handleEndsChange = e => {
     if (repeatEnds != 2) enterUntil = null
@@ -98,13 +79,27 @@
 
   const validate = () => {
     valid = false
-    console.log(`B4 Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
+    // console.log(`B4 Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
     if (enterFreq === '0') {
       errorMsg = 'Frequency MUST be selected'
-      return
+      return {}
     }
     recurOptions.freq = Number(enterFreq)
-    if (enterInterval === null) enterInterval = 1
+
+    if (!enterInterval) {
+      recurOptions.interval = 1
+      enterInterval = 1
+    }
+    recurOptions.interval = enterInterval
+
+    recurOptions.byweekday = Object.keys(daysSelected)
+      .filter(el => daysSelected[el] === true)
+      .map(el => ALL_WEEKDAYS.indexOf(el))
+    // console.log(`B4 Valid byweekday: ${JSON.stringify(recurOptions.byweekday, null, 2)}`)
+    if (!recurOptions.byweekday || !recurOptions.byweekday.length) {
+      errorMsg = 'Event MUST recur on at least one day'
+      return {}
+    }
 
     if (repeatEnds === 1) {
       enterCount = null
@@ -113,19 +108,12 @@
     if (repeatEnds != 2) enterUntil = null
     if (repeatEnds != 3) enterCount = null
 
-    recurOptions.byweekday = Object.keys(daysSelected)
-      .filter(el => daysSelected[el] === true)
-      .map(el => ALL_WEEKDAYS.indexOf(el))
     recurOptions.count = enterCount
     recurOptions.interval = enterInterval
     recurOptions.until = enterUntil === null ? null : new Date(enterUntil)
     // remove keys that are null or have empty arrays
     const selectedOptions = { ...recurOptions }
     Object.keys(recurOptions).map(el => {
-      // console.log(
-      //   `${recurOptions[el]}: type: ${typeof recurOptions[el]} - ${recurOptions[el] instanceof
-      //     Array}`
-      // )
       if (
         (recurOptions[el] instanceof Array && recurOptions[el].length === 0) ||
         recurOptions[el] === null
@@ -133,11 +121,11 @@
         delete selectedOptions[el]
       }
     })
-    console.log(`Aft Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
-    console.log(`valid in: ${JSON.stringify(selectedOptions, null, 2)}`)
+    // console.log(`Aft Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
+    // console.log(`valid in: ${JSON.stringify(selectedOptions, null, 2)}`)
     const { ruleText, ruleString } = validateRule(selectedOptions)
-    console.log(`valid out ruleText: ${JSON.stringify(ruleText, null, 2)}`)
-    console.log(`valid out ruleString: ${JSON.stringify(ruleString, null, 2)}`)
+    // console.log(`valid out ruleText: ${JSON.stringify(ruleText, null, 2)}`)
+    // console.log(`valid out ruleString: ${JSON.stringify(ruleString, null, 2)}`)
 
     newRecurrence = ruleString
     valid = true
@@ -311,8 +299,6 @@
     color: var(--dark-color);
   }
 </style>
-
-<!-- <svelte:window on:keydown={handle_keydown} /> -->
 
 <div class="modal-background" />
 

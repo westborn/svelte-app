@@ -100,7 +100,7 @@
     {disabled}
     class="select col-1"
     bind:value={selectedId}
-    size={filteredEvents.length < 5 ? 5 : filteredEvents.length + 1}>
+    size={filteredEvents.length < 5 ? 5 : 20}>
     <option value="" disabled>Select a Course</option>
     {#each filteredEvents as event}
       <option value={event.id}>{fmtDate(event.startDateTime)} - {event.summary}</option>
