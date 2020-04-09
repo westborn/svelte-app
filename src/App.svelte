@@ -41,17 +41,21 @@
     var req = {
       singleEvents: false,
       timeMin: '2019-10-23T10:00:00-07:00',
-      timeMax: '2020-04-30T10:00:00-07:00'
+      timeMax: '2020-06-30T10:00:00-07:00'
     }
     if (!LOCAL) {
       // console.log('calling showEvents')
       google.script.run.withSuccessHandler(showEvents).codeGetEvents(req)
     }
   }
+
   const showEvents = sheetEvents => {
+    const comp = (a, b) => new Date(a.startdateTime).getTime() - new Date(b.startdateTime).getTime()
     // console.log('inside showEvents')
     // console.log(sheetEvents)
     events = JSON.parse(sheetEvents)
+      .sort(comp)
+      .reverse()
     initialised = true
   }
   // CRUD functions (calling and returning)
@@ -107,27 +111,6 @@
 
   let initialised = false
   let formType = ''
-
-  let test = null
-
-  // $: test =
-  //   selectedEvent && selectedEvent.recurrence
-  //     ? rrule.RRule.parseString(selectedEvent.recurrence)
-  //     : null
-  //
-  // $: test = selectedEvent
-  //   ? selectedEvent.recurrence.length > 0
-  //     ? rrule.RRule.parseString(selectedEvent.recurrence)
-  //     : 'empty'
-  //   : 'not there'
-  // let test = recurrence !== '' ? rrule.RRule.parseString(recurrence) : ''
-  // let test = new rrule.RRule({
-  //   freq: rrule.RRule.WEEKLY,
-  //   // interval: 0,
-  //   byweekday: [rrule.RRule.MO, rrule.RRule.FR],
-  //   dtstart: new Date(Date.UTC(2012, 1, 1, 10, 30)),
-  //   until: new Date(Date.UTC(2012, 12, 31))
-  // }).toText()
 </script>
 
 <style>
@@ -152,8 +135,6 @@
     <Event
       on:message={e => {
         eventId = e.detail.eventId
-        const [test2] = events && eventId ? events.find(event => event.id === eventId).recurrence : null
-        test = test2 ? parseRuleText(test2) : null
       }}
       {events}
       disabled={allowEventdisplay} />
@@ -198,6 +179,6 @@
   {:else}
     <button class="btn" on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
-  <pre>{JSON.stringify(test, null, 2)}</pre>
+  <pre>{JSON.stringify(event, null, 2)}</pre>
 
 </div>

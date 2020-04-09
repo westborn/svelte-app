@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher, onDestroy } from 'svelte'
   import WeekDayPicker from './WeekDayPicker.svelte'
   import {
-    ymd,
+    WEEKDAY_NAMES,
     decodeRecurRule,
     decodeRecurText,
     decodeRecurDates,
@@ -13,9 +13,7 @@
   export let recurrence
   $: currentRecurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
   $: currentRecurText = currentRecurRule ? currentRecurRule.toText() : ''
-  $: currentRecurDates = currentRecurRule
-    ? decodeRecurDates(currentRecurRule, ymd(new Date(startDateTime)))
-    : ''
+  $: currentRecurDates = currentRecurRule ? decodeRecurDates(currentRecurRule, startDateTime) : ''
 
   export let startDateTime
 
@@ -25,12 +23,13 @@
   }
 
   onMount(() => {
-    // console.log(`mount1: ${JSON.stringify(recurrence, null, 2)}`)
+    console.log(`mount1b: ${JSON.stringify(startDateTime, null, 2)}`)
+    console.log(`mount1a: ${JSON.stringify(recurrence, null, 2)}`)
     recurOptions = !recurrence ? { ...DEFAULT_OPTIONS } : { ...parseRuleText(recurrence) }
     delete recurOptions.wkst
     // console.log(`mount2: ${JSON.stringify(recurOptions, null, 2)}`)
     enterCount = null
-    enterInterval = null
+    enterInterval = ''
     enterUntil = null
     repeatEnds = 1
 
@@ -38,33 +37,31 @@
       repeatEnds = 1
       enterFreq = '0'
       enterCount = null
-      enterInterval = null
+      enterInterval = ''
       enterUntil = null
       return
-    } else {
-      // console.log(`mount int: ${JSON.stringify(recurOptions.interval, null, 2)}`)
-      if (!recurOptions.interval || recurOptions.interval < 1) {
-        recurOptions.interval = 1
-      }
     }
     enterFreq = String(recurOptions.freq)
 
-    enterInterval = recurOptions.interval
+    if (recurOptions.interval) {
+      enterInterval = recurOptions.interval
+    }
 
-    // decode byweekday if it has come from RRule
+    // decode byweekday (from RRule, change the structure to an array)
     if (recurOptions.byweekday) {
       const tmp = recurOptions.byweekday.map(el => el.weekday)
       recurOptions.byweekday = [...tmp]
+      // now populate the data entry for days of the week
+      recurOptions.byweekday.map(el => {
+        daysSelected[WEEKDAY_NAMES[el]] = true
+      })
     }
-    // now populate the data entry for days of the week
-    recurOptions.byweekday.map(el => {
-      daysSelected[ALL_WEEKDAYS[el]] = true
-    })
 
     if (recurOptions.until) {
       enterUntil = recurOptions.until.toISOString().slice(0, 10)
       repeatEnds = 2
     }
+
     if (recurOptions.count) {
       enterCount = recurOptions.count
       repeatEnds = 3
@@ -81,25 +78,22 @@
     valid = false
     // console.log(`B4 Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
     if (enterFreq === '0') {
-      errorMsg = 'Frequency MUST be selected'
+      msg = 'Event Does Not Recur'
+      valid = true
       return {}
     }
     recurOptions.freq = Number(enterFreq)
 
-    if (!enterInterval) {
-      recurOptions.interval = 1
-      enterInterval = 1
-    }
     recurOptions.interval = enterInterval
 
     recurOptions.byweekday = Object.keys(daysSelected)
       .filter(el => daysSelected[el] === true)
-      .map(el => ALL_WEEKDAYS.indexOf(el))
+      .map(el => WEEKDAY_NAMES.indexOf(el))
     // console.log(`B4 Valid byweekday: ${JSON.stringify(recurOptions.byweekday, null, 2)}`)
-    if (!recurOptions.byweekday || !recurOptions.byweekday.length) {
-      errorMsg = 'Event MUST recur on at least one day'
-      return {}
-    }
+    // if (!recurOptions.byweekday || !recurOptions.byweekday.length) {
+    //   msg = 'Event MUST recur on at least one day'
+    //   return {}
+    // }
 
     if (repeatEnds === 1) {
       enterCount = null
@@ -109,18 +103,18 @@
     if (repeatEnds != 3) enterCount = null
 
     recurOptions.count = enterCount
-    recurOptions.interval = enterInterval
+
     recurOptions.until = enterUntil === null ? null : new Date(enterUntil)
     // remove keys that are null or have empty arrays
     const selectedOptions = { ...recurOptions }
-    Object.keys(recurOptions).map(el => {
-      if (
-        (recurOptions[el] instanceof Array && recurOptions[el].length === 0) ||
-        recurOptions[el] === null
-      ) {
-        delete selectedOptions[el]
-      }
-    })
+    // Object.keys(recurOptions).map(el => {
+    //   if (
+    //     (recurOptions[el] instanceof Array && recurOptions[el].length === 0) ||
+    //     recurOptions[el] === null
+    //   ) {
+    //     delete selectedOptions[el]
+    //   }
+    // })
     // console.log(`Aft Valid freq: ${JSON.stringify(enterFreq, null, 2)}`)
     // console.log(`valid in: ${JSON.stringify(selectedOptions, null, 2)}`)
     const { ruleText, ruleString } = validateRule(selectedOptions)
@@ -133,23 +127,11 @@
   }
 
   const selected = () => {
-    const { selectedOptions } = validate()
+    const selectedOptions = validate()
     if (valid) {
       dispatch('selected', { payload: selectedOptions })
     }
   }
-
-  const FREQUENCIES = ['YEARLY', 'MONTHLY', 'WEEKLY', 'DAILY', 'HOURLY', 'MINUTELY', 'SECONDLY']
-  const DAYS = {
-    MO: 0,
-    TU: 1,
-    WE: 2,
-    TH: 3,
-    FR: 4,
-    SA: 5,
-    SU: 6
-  }
-  const ALL_WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
 
   let recurOptions = {
     freq: null,
@@ -186,7 +168,7 @@
   }
 
   let valid = true
-  let errorMsg = ''
+  let msg = ''
 
   let enterFreq
   let enterCount
@@ -198,9 +180,7 @@
 
   $: newRecurRule = newRecurrence ? rrule.RRule.fromString(newRecurrence) : ''
   $: newRecurText = newRecurRule ? newRecurRule.toText() : ''
-  $: newRecurDates = newRecurRule
-    ? decodeRecurDates(newRecurRule, ymd(new Date(startDateTime)))
-    : ''
+  $: newRecurDates = newRecurRule ? decodeRecurDates(newRecurRule, startDateTime) : ''
 </script>
 
 <style>
@@ -233,7 +213,7 @@
 
   .repeat-div {
     display: grid;
-    grid-template-columns: 100px 50px 80px;
+    grid-template-columns: 100px 50px 100px;
     gap: 0.5em;
     padding: 8px 0 5px 0;
   }
@@ -309,7 +289,7 @@
     <input type="number" bind:value={enterInterval} min="1" max="15" />
 
     <select bind:value={enterFreq}>
-      <option value="0" disabled>period?</option>
+      <option value="0">NO Recur</option>
       <option value="3">days</option>
       <option value="2">weeks</option>
       <option value="1">months</option>
@@ -380,7 +360,7 @@
   <pre>{recurrence}</pre>
   <pre>{currentRecurDates}</pre>
   {#if !valid}
-    <pre>{errorMsg}</pre>
+    <pre>{msg}</pre>
   {:else}
     <pre>{newRecurrence}</pre>
     <pre>{newRecurDates}</pre>

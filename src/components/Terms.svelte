@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { createEventDispatcher } from 'svelte'
-  import { splitDate, fmtDate } from '../utils.js'
+  import { fmtDate } from '../utils.js'
 
   const dispatch = createEventDispatcher()
 

@@ -1,7 +1,14 @@
 <script>
   import { onMount, tick } from 'svelte'
   import { createEventDispatcher } from 'svelte'
-  import { ymd, decodeRecurRule, decodeRecurText, decodeRecurDates } from '../utils'
+  import {
+    TIMES,
+    dmyToYMD,
+    decodeRecurDates,
+    encodeDateTime,
+    decodeDateTime,
+    validateRule
+  } from '../utils'
   import RecurForm from './RecurForm.svelte'
 
   const dispatch = createEventDispatcher()
@@ -12,30 +19,9 @@
   export let venues
   export let contacts
 
-  const times = [
-    '08:00',
-    '08:30',
-    '09:00',
-    '09:30',
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '12:00',
-    '12:30',
-    '13:00',
-    '13:30',
-    '14:00',
-    '14:30',
-    '15:00',
-    '15:30',
-    '16:00',
-    '16:30',
-    '17:00'
-  ]
-
   onMount(() => {
     id = event.id
+    console.log(`eventFormMount: ${JSON.stringify(event, null, 2)}`)
 
     if (formType === 'update') {
       // if these select boxers are not recognized default to 0
@@ -52,24 +38,41 @@
 
       summary = event.summary
       description = event.description
-      startDate = event.startDateTime === '' ? '' : ymd(new Date(event.startDateTime))
+
+      let dateAndTime = {}
+      // console.log('mount3:', event.startDateTime)
+      dateAndTime = decodeDateTime(event.startDateTime)
+      startYMD = dateAndTime.dte
+      selectedStartTime = dateAndTime.tme
+
+      // console.log('mount4:', event.endDateTime)
+      dateAndTime = decodeDateTime(event.endDateTime)
+      selectedEndTime = dateAndTime.tme
+      // console.log('mount5:', selectedEndTime)
       ;[recurrence] = event.recurrence
       minEnrol = event.extendedProperties.private.min
       maxEnrol = event.extendedProperties.private.max
       cost = event.extendedProperties.private.cost
     }
     if (formType === 'create') {
-      startDate = ymd(new Date())
+      startYMD = dmyToYMD(new Date().toLocaleString().slice(0, 10))
+      // console.log('create', startYMD)
     }
   })
+
+  const validateEvent = () => {
+    // startdate is a date
+    // startime exists
+    // endtim exists
+    // startime <= endtime
+  }
 
   const addNewEvent = () => {
     resultEvent.summary = summary
     resultEvent.description = description
     resultEvent.location = venues[selectedVenue].name
-    resultEvent.isAllDayEvent = true //TODO
-    resultEvent.startDateTime = startDate //TODO
-    resultEvent.endDateTime = startDate //TODO
+    resultEvent.startDateTime = encodeDateTime(startYMD, selectedStartTime) //TODO
+    resultEvent.endDateTime = encodeDateTime(startYMD, selectedEndTime) //TODO
     resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
@@ -85,10 +88,9 @@
     resultEvent.summary = summary
     resultEvent.description = description
     resultEvent.location = venues[selectedVenue].name
-    // resultEvent.isAllDayEvent = true //TODO
-    // resultEvent.startDateTime = startDate //TODO
-    // resultEvent.endDateTime = startDate //TODO
-    // resultEvent.recurrence = recurrence //TODO
+    resultEvent.startDateTime = encodeDateTime(startYMD, selectedStartTime) //TODO
+    resultEvent.endDateTime = encodeDateTime(startYMD, selectedEndTime) //TODO
+    resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
     resultEvent.extendedProperties.private.min = minEnrol
@@ -110,8 +112,9 @@
   let id = ''
   let summary = ''
   let description = ''
-  let startDate = ''
-  let selectedStartTime = ''
+  let startYMD = '2020-02-01'
+  let selectedStartTime = '08:00'
+  $: startDateTime = encodeDateTime(startYMD, selectedStartTime)
   let selectedEndTime = ''
   let recurrence = ''
   let minEnrol = ''
@@ -120,24 +123,15 @@
   let minMaxCost = ''
   let valid = true //TODO
 
-  const timestampUTC = (dte, tme) => {
-    //TODO - workout how to include time
-    if (dte === '') return new Date().toISOString()
-    return new Date(dte).toISOString()
-  }
-
-  $: startDateTime = timestampUTC(startDate, selectedStartTime)
-
   $: recurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, startDate) : ''
+  $: recurDates = recurRule ? decodeRecurDates(recurRule, encodeDateTime(startYMD, '00:00')) : ''
 
   let resultEvent = {
     id: null,
     description: '',
     location: '',
     summary: '',
-    isAllDayEvent: false,
     startDateTime: '',
     endDateTime: '',
     recurrence: [],
@@ -152,8 +146,10 @@
     }
   }
 
-  const selectedModal = e => {
-    console.log(e)
+  const selectedModal = recurOptions => {
+    console.log(`exit Modal: ${JSON.stringify(recurOptions)}`)
+    const { ruleText, ruleString } = validateRule(recurOptions)
+    recurrence = ruleString
     showRecurPicker = false
   }
 
@@ -204,15 +200,15 @@
     </div>
 
     <div class="layout-3col input-field col-1">
-      <input class="col-1" type="date" bind:value={startDate} />
+      <input class="col-1" type="date" bind:value={startYMD} />
       <label>Event Date / Start Time / End Time</label>
       <select class="col-2" bind:value={selectedStartTime}>
-        {#each times as item (item)}
+        {#each TIMES as item (item)}
           <option value={item}>{item}</option>
         {/each}
       </select>
       <select class="col-3" bind:value={selectedEndTime}>
-        {#each times as item (item)}
+        {#each TIMES as item (item)}
           <option value={item}>{item}</option>
         {/each}
       </select>
@@ -253,7 +249,7 @@
       <button
         class="btn"
         on:click={() => {
-          console.log(`Modal: startDateTime: ${startDateTime}`)
+          console.log(`Modal: startYMD: ${startYMD}`)
           showRecurPicker = true
         }}>
         Edit Recurrence Details

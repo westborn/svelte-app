@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import { fmtDate, dmy, getNested, checkNested, decodeRecurRule, decodeRecurText } from '../utils'
+  import { fmtDate, getNested, checkNested, decodeRecurRule, decodeRecurText } from '../utils'
 
   const dispatch = createEventDispatcher()
 
@@ -10,7 +10,7 @@
   const resetInputs = event => {
     selectedId = event ? event.id : ''
     summary = event ? event.summary : ''
-    startDateTime = event ? fmtDate(event.startDateTime) : ''
+    formattedDateTime = event ? fmtDate(event.startDateTime) : ''
     description = event ? event.description : ''
     location = event ? event.location : ''
     //destructure first element from recurrence array on the event
@@ -40,7 +40,7 @@
   let summary = ''
   let description = ''
   let location = ''
-  let startDateTime = ''
+  let formattedDateTime = ''
   let recurrence = ''
   let contact = ''
   let presenter = ''
@@ -111,7 +111,7 @@
     <p class="col-1 field-name">Summary:</p>
     <p class="col-2">{summary}</p>
     <p class="col-1 field-name">Starting:</p>
-    <p class="col-2">{startDateTime}</p>
+    <p class="col-2">{formattedDateTime}</p>
     <p class="col-1 field-name">Description:</p>
     <p class="col-2">{description}</p>
     <p class="col-1 field-name">Location:</p>

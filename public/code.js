@@ -27,6 +27,16 @@ function codeGetEvents(req) {
   return JSON.stringify(events)
 }
 
+function testGetEvents() {
+  var req = {
+    singleEvents: false,
+    timeMin: '2019-10-23T10:00:00-07:00',
+    timeMax: '2020-06-30T10:00:00-07:00',
+  }
+  var events = JSON.parse(codeGetEvents(req))
+  console.log(JSON.stringify(events, null, 2))
+}
+
 /************************************************************************
  *
  * Gets the last row number based on a selected column range values
@@ -89,27 +99,12 @@ function getList(colName) {
   var ws = ss.getSheetByName('Options')
   var values = getColByName(colName, ws)
   var list = []
-  values.forEach(function(value) {
+  values.forEach(function (value) {
     if (value[0] !== '') {
       list.push(value[0])
     }
   })
   return list
-}
-
-function OLDgetList(colName) {
-  var url =
-    'https://docs.google.com/spreadsheets/d/1mIYWQJkGhMZmh6pW7VV11ivjftcNloNlxvOgQ6_21yw/edit#gid=0'
-  ss = SpreadsheetApp.openByUrl(url)
-  var ws = ss.getSheetByName('Options')
-  var values = getColByName(colName, ws)
-  var listObj = {}
-  values.forEach(function(value) {
-    if (value[0] !== '') {
-      listObj[value[0]] = null
-    }
-  })
-  return listObj
 }
 
 function getNested(obj, ...args) {
@@ -135,7 +130,7 @@ function listUpcomingEvents(startDate) {
     showDeleted: false,
     singleEvents: true,
     maxResults: 10,
-    orderBy: 'startTime'
+    orderBy: 'startTime',
   }
   var response = Calendar.Events.list(calendarId, optionalArgs)
   var events = response.items
@@ -161,7 +156,7 @@ function eventAdd(event) {
 function test() {
   const payload = {
     id: '07rafrh9t0pdv74bgoqlle1qtv',
-    summary: 'Another 3 Day event again'
+    summary: 'Another 3 Day event again',
   }
   const result = eventUpdate(payload)
   console.log(result)
@@ -174,7 +169,7 @@ function eventUpdate(event) {
   const res = {}
   try {
     payload = {
-      summary: event.summary
+      summary: event.summary,
     }
     const data = Calendar.Events.patch(payload, calendarId, (eventId = event.id))
     res.error = false
@@ -213,7 +208,7 @@ function findCalendarByName(name) {
   console.log(cal.getTimeZone())
 }
 
-const getDateUTC = dteStr => {
+const getDateUTC = (dteStr) => {
   return new Date(dteStr).toISOString()
 }
 //Compare dates from Google Calendar API
@@ -225,19 +220,24 @@ const comp = (a, b) =>
 function extractCalendarDetails(data) {
   var result = []
 
-  //Remove cancelled events, sort by date
+  //Remove cancelled events and all day events, sort by date
   var resultFiltered = data
-    .filter(item => item && item.hasOwnProperty('status') && item.status !== 'cancelled')
+    .filter(
+      (item) =>
+        item &&
+        item.hasOwnProperty('status') &&
+        item.status !== 'cancelled' &&
+        !item.start.hasOwnProperty('date')
+    )
     .sort(comp)
     .reverse()
 
-  resultFiltered.forEach(element => {
+  resultFiltered.forEach((element) => {
     var event = {
       id: '',
       summary: '',
       description: '',
       location: '',
-      isAllDayEvent: false,
       startDateTime: '',
       endDateTime: '',
       recurrence: [],
@@ -247,9 +247,9 @@ function extractCalendarDetails(data) {
           contact: '',
           min: '',
           max: '',
-          cost: ''
-        }
-      }
+          cost: '',
+        },
+      },
     }
 
     event.id = element.id || ''
@@ -257,10 +257,8 @@ function extractCalendarDetails(data) {
     event.description = element.description || ''
     event.location = element.location || ''
     event.recurrence = element.recurrence || ''
-    event.startDateTime = getDateUTC(element.start.dateTime || element.start.date)
-    event.endDateTime = getDateUTC(element.end.dateTime || element.end.date)
-    //check for event that doesn't have any times (all day event)
-    event.isAllDayEvent = element.start && element.start.date && element.end.date ? true : false
+    event.startDateTime = getDateUTC(element.start.dateTime)
+    event.endDateTime = getDateUTC(element.end.dateTime)
 
     event.extendedProperties.private.presenter = getNested(
       element,
