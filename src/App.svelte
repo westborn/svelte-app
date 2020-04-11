@@ -7,7 +7,7 @@
 
   import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
 
-  const LOCAL = true
+  const LOCAL = false
 
   // ============================================================================
   const populateVenues = data => {
@@ -66,7 +66,7 @@
   }
   const createEvent = event => {
     console.log('Ready to Create')
-    console.log(event)
+    console.log(JSON.stringify(event, null, 2))
     allowEventdisplay = false
     formType = ''
   }
@@ -77,10 +77,34 @@
   }
   const updateEvent = event => {
     console.log('Ready to Update')
-    console.log(event)
+    console.log(JSON.stringify(event, null, 2))
+    const returnEvent = {
+      id: event.id,
+      summary: event.summary,
+      description: event.description,
+      location: event.location,
+      start: {
+        dateTime: event.startDateTime,
+        timeZone: 'Australia/Sydney'
+      },
+      end: {
+        dateTime: event.endDateTime,
+        timeZone: 'Australia/Sydney'
+      },
+      recurrence: [event.recurrence],
+      extendedProperties: { ...event.extendedProperties }
+    }
+    console.log(JSON.stringify(returnEvent, null, 2))
+    //TODO show loader
+    google.script.run.withSuccessHandler(afterUpdate).codeUpdateEvent(returnEvent)
+  }
+  const afterUpdate = payload => {
     formType = ''
     allowEventdisplay = false
+    showEvents(payload)
+    //TODO show loader
   }
+
   const remove = () => {
     formType = 'remove'
     allowEventdisplay = true
@@ -88,7 +112,7 @@
   }
   const removeEvent = event => {
     console.log('Ready to Remove')
-    console.log(event)
+    console.log(JSON.stringify(event, null, 2))
     formType = ''
     allowEventdisplay = false
   }
@@ -179,6 +203,6 @@
   {:else}
     <button class="btn" on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
-  <pre>{JSON.stringify(event, null, 2)}</pre>
+  <!-- <pre>{JSON.stringify(event, null, 2)}</pre> -->
 
 </div>

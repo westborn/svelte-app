@@ -158,26 +158,28 @@ function test() {
     id: '07rafrh9t0pdv74bgoqlle1qtv',
     summary: 'Another 3 Day event again',
   }
-  const result = eventUpdate(payload)
+  const result = codeUpdateEvent(payload)
   console.log(result)
 }
 
-function eventUpdate(event) {
+function codeUpdateEvent(updatedEvent) {
   console.log('Update Event:\n')
-  console.log(event)
+  console.log(updatedEvent)
   const calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Tsey
   const res = {}
   try {
-    payload = {
-      summary: event.summary,
-    }
-    const data = Calendar.Events.patch(payload, calendarId, (eventId = event.id))
-    res.error = false
-    res.data = data
+    const data = Calendar.Events.update(updatedEvent, calendarId, updatedEvent.id)
+    const events = codeGetEvents({
+      singleEvents: false,
+      timeMin: '2019-10-23T10:00:00-07:00',
+      timeMax: '2020-06-30T10:00:00-07:00',
+    })
+    return events
   } catch (err) {
     res.error = true
-    res.name - err.name
+    res.name = err.name
     res.message = err.message
+    console.log(res)
   }
   return res
 }

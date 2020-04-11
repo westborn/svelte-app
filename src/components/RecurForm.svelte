@@ -1,14 +1,7 @@
 <script>
   import { onMount, createEventDispatcher, onDestroy } from 'svelte'
   import WeekDayPicker from './WeekDayPicker.svelte'
-  import {
-    WEEKDAY_NAMES,
-    decodeRecurRule,
-    decodeRecurText,
-    decodeRecurDates,
-    validateRule,
-    parseRuleText
-  } from '../utils'
+  import { WEEKDAY_NAMES, decodeRecurDates, validateRule, parseRuleText } from '../utils'
 
   export let recurrence
   $: currentRecurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
@@ -26,7 +19,7 @@
     console.log(`mount1b: ${JSON.stringify(startDateTime, null, 2)}`)
     console.log(`mount1a: ${JSON.stringify(recurrence, null, 2)}`)
     recurOptions = !recurrence ? { ...DEFAULT_OPTIONS } : { ...parseRuleText(recurrence) }
-    delete recurOptions.wkst
+    // delete recurOptions.wkst
     // console.log(`mount2: ${JSON.stringify(recurOptions, null, 2)}`)
     enterCount = null
     enterInterval = ''
@@ -86,10 +79,11 @@
 
     recurOptions.interval = enterInterval
 
+    console.log(`B4 Valid byweekday: ${JSON.stringify(recurOptions.byweekday, null, 2)}`)
     recurOptions.byweekday = Object.keys(daysSelected)
       .filter(el => daysSelected[el] === true)
       .map(el => WEEKDAY_NAMES.indexOf(el))
-    // console.log(`B4 Valid byweekday: ${JSON.stringify(recurOptions.byweekday, null, 2)}`)
+    console.log(`AFT Valid byweekday: ${JSON.stringify(recurOptions.byweekday, null, 2)}`)
     // if (!recurOptions.byweekday || !recurOptions.byweekday.length) {
     //   msg = 'Event MUST recur on at least one day'
     //   return {}
@@ -156,7 +150,6 @@
     bymonth: null,
     bymonthday: null
   }
-  let modal
   let daysSelected = {
     MO: false,
     TU: false,
@@ -282,7 +275,7 @@
 
 <div class="modal-background" />
 
-<div class="modal" role="dialog" aria-modal="true" bind:this={modal}>
+<div class="modal" role="dialog" aria-modal="true">
 
   <div class="repeat-div">
     <p>Repeat Every</p>

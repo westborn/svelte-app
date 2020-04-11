@@ -60,10 +60,18 @@
     }
   })
 
+  const selectedModal = recurOptions => {
+    console.log(`exit Modal: ${JSON.stringify(recurOptions)}`)
+    const { ruleText, ruleString } = validateRule(recurOptions)
+    console.log('exit Modal Rule:', ruleString)
+    recurrence = ruleString
+    showRecurPicker = false
+  }
+
   const validateEvent = () => {
     // startdate is a date
     // startime exists
-    // endtim exists
+    // endtime exists
     // startime <= endtime
   }
 
@@ -105,6 +113,8 @@
     dispatch('eventRemove', { event: resultEvent })
   }
 
+  let showRecurPicker = false
+
   let selectedPresenter = 0
   let selectedVenue = 0
   let selectedContact = 0
@@ -125,7 +135,7 @@
 
   $: recurRule = recurrence ? rrule.RRule.fromString(recurrence) : ''
   $: recurText = recurRule ? recurRule.toText() : ''
-  $: recurDates = recurRule ? decodeRecurDates(recurRule, encodeDateTime(startYMD, '00:00')) : ''
+  $: recurDates = recurRule ? decodeRecurDates(recurRule, startDateTime) : ''
 
   let resultEvent = {
     id: null,
@@ -145,15 +155,6 @@
       }
     }
   }
-
-  const selectedModal = recurOptions => {
-    console.log(`exit Modal: ${JSON.stringify(recurOptions)}`)
-    const { ruleText, ruleString } = validateRule(recurOptions)
-    recurrence = ruleString
-    showRecurPicker = false
-  }
-
-  let showRecurPicker = false
 </script>
 
 <style>
@@ -246,6 +247,7 @@
 
     <div class="col-2">
       <p>Recurs: {recurText}</p>
+      <p>On: {recurDates}</p>
       <button
         class="btn"
         on:click={() => {
