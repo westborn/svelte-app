@@ -1,5 +1,5 @@
 <script>
-  import { onMount, tick } from 'svelte'
+  import { onMount } from 'svelte'
   import { createEventDispatcher } from 'svelte'
   import {
     TIMES,
@@ -9,6 +9,7 @@
     decodeDateTime,
     validateRule
   } from '../utils'
+
   import RecurForm from './RecurForm.svelte'
 
   const dispatch = createEventDispatcher()
@@ -84,9 +85,9 @@
     resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
-    resultEvent.extendedProperties.private.min = minEnrol
-    resultEvent.extendedProperties.private.max = maxEnrol
-    resultEvent.extendedProperties.private.cost = cost
+    resultEvent.extendedProperties.private.min = minEnrol ? minEnrol : 0
+    resultEvent.extendedProperties.private.max = maxEnrol ? maxEnrol : 0
+    resultEvent.extendedProperties.private.cost = cost ? cost : 0
     console.log(resultEvent)
     dispatch('eventCreate', { event: resultEvent })
   }
@@ -101,9 +102,9 @@
     resultEvent.recurrence = recurrence //TODO
     resultEvent.extendedProperties.private.presenter = presenters[selectedPresenter].name
     resultEvent.extendedProperties.private.contact = contacts[selectedContact].name
-    resultEvent.extendedProperties.private.min = minEnrol
-    resultEvent.extendedProperties.private.max = maxEnrol
-    resultEvent.extendedProperties.private.cost = cost
+    resultEvent.extendedProperties.private.min = minEnrol ? minEnrol : 0
+    resultEvent.extendedProperties.private.max = maxEnrol ? maxEnrol : 0
+    resultEvent.extendedProperties.private.cost = cost ? cost : 0
     console.log(resultEvent)
     dispatch('eventUpdate', { event: resultEvent })
   }
@@ -149,9 +150,9 @@
       private: {
         presenter: '',
         contact: '',
-        min: '',
-        max: '',
-        cost: ''
+        min: 0,
+        max: 0,
+        cost: 0
       }
     }
   }

@@ -246,4 +246,35 @@ const EVENTS = `[
   }
 ]`
 
-export { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS }
+const CALENDARS = [
+  {
+    summary: 'U3A draft bookings',
+    id: 'sv3qe35g5jv5lv2n6o10bfi7h0@group.calendar.google.com',
+  },
+  {
+    summary: 'U3A Equipment',
+    id: 'n0v4c8783n9n2quqnqjihrdod8@group.calendar.google.com',
+  },
+  {
+    summary: 'U3A Committee Calendar',
+    id: 'fve4mivceu0fdl2io2a1fpvq9k@group.calendar.google.com',
+  },
+  {
+    summary: 'GS Test Apps',
+    id: 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com',
+  },
+  {
+    summary: 'U3A Absences',
+    id: 'fiv0ci3csmnepkjgcb6t54s960@group.calendar.google.com',
+  },
+  {
+    summary: 'stoge03@gmail.com',
+    id: 'stoge03@gmail.com',
+  },
+  {
+    summary: 'Contacts',
+    id: 'addressbook#contacts@group.v.calendar.google.com',
+  },
+]
+
+export { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS, CALENDARS }

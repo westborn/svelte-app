@@ -1,11 +1,13 @@
 <script>
+  import { onMount } from 'svelte'
+
   import Terms from './components/Terms.svelte'
   import Event from './components/Event.svelte'
   import EventForm from './components/EventForm.svelte'
 
   import { parseRuleText } from './utils'
 
-  import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS } from './DATA.js'
+  import { EVENTS, TERMS, PRESENTERS, VENUES, CONTACTS, CALENDARS } from './DATA.js'
 
   const LOCAL = false
 
@@ -20,6 +22,22 @@
     data.forEach((item, idx) => contacts.push({ id: idx, name: item }))
   }
 
+  const populateCalendars = data => {
+    data.forEach(el => calendars.push({ id: el.id, name: el.summary }))
+    calendars = calendars ? [...calendars] : [{ id: 0, name: 'not yet' }]
+    selectedCalendarId = calendars[0].id
+  }
+
+  onMount(() => {
+    if (LOCAL) {
+      populateCalendars(CALENDARS)
+      calendars = calendars ? [...calendars] : [{ id: 0, name: 'not yet' }]
+      selectedCalendarId = calendars[0].id
+    } else {
+      google.script.run.withSuccessHandler(populateCalendars).getCalendarList()
+    }
+  })
+
   const doIninitialise = () => {
     if (LOCAL) {
       populatePresenters(PRESENTERS)
@@ -29,7 +47,6 @@
       showEvents(EVENTS)
       return
     } else {
-      // console.log('calling showDates')
       google.script.run.withSuccessHandler(populateVenues).getList('venues')
       google.script.run.withSuccessHandler(populatePresenters).getList('presenters')
       google.script.run.withSuccessHandler(populateContacts).getList('contacts')
@@ -38,14 +55,17 @@
   }
   const showDates = sheetTerms => {
     terms = JSON.parse(sheetTerms)
-    var req = {
-      singleEvents: false,
-      timeMin: '2019-10-23T10:00:00-07:00',
-      timeMax: '2020-06-30T10:00:00-07:00'
+    var payload = {
+      calendarId: selectedCalendarId,
+      req: {
+        singleEvents: false,
+        timeMin: '2019-10-23T10:00:00-07:00',
+        timeMax: '2020-06-30T10:00:00-07:00'
+      }
     }
     if (!LOCAL) {
       // console.log('calling showEvents')
-      google.script.run.withSuccessHandler(showEvents).codeGetEvents(req)
+      google.script.run.withSuccessHandler(showEvents).codeGetEvents(payload)
     }
   }
 
@@ -91,7 +111,7 @@
         dateTime: event.endDateTime,
         timeZone: 'Australia/Sydney'
       },
-      recurrence: [event.recurrence],
+      recurrence: event.recurrence ? [event.recurrence] : [],
       extendedProperties: { ...event.extendedProperties }
     }
     console.log(JSON.stringify(returnEvent, null, 2))
@@ -121,6 +141,8 @@
   let presenters = []
   let venues = []
   let contacts = []
+  let calendars = []
+  let selectedCalendarId = ''
 
   // Reactive for term fields
   let terms = []
@@ -141,6 +163,11 @@
   button:disabled {
     cursor: not-allowed;
     color: rgba(0, 0, 0, 0.2);
+  }
+
+  .input-field {
+    margin: 4rem;
+    width: 15rem;
   }
 </style>
 
@@ -201,6 +228,15 @@
     <!-- <!-- <pre>{JSON.stringify(terms[termIndex], null, 2)}</pre> -->
     <!-- <pre>{JSON.stringify(events.filter(event => event.id === eventId), null, 2)}</pre> -->
   {:else}
+    <div class="input-field">
+      <select bind:value={selectedCalendarId}>
+        {#each calendars as { id, name }}
+          <option value={id}>{name}</option>
+        {/each}
+      </select>
+      <label>Choose the Courses Calendar</label>
+
+    </div>
     <button class="btn" on:click={doIninitialise} disabled={initialised}>Go</button>
   {/if}
   <!-- <pre>{JSON.stringify(event, null, 2)}</pre> -->

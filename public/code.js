@@ -19,21 +19,24 @@ function codeGetDates() {
   return JSON.stringify(obj)
 }
 
-function codeGetEvents(req) {
+function codeGetEvents(payload) {
   //  var calendarId = 'sv3qe35g5jv5lv2n6o10bfi7h0@group.calendar.google.com';
-  var calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Test
-  console.log(req)
+  // var calendarId = 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com' // GS Test
+  var { calendarId, req } = payload
   var events = extractCalendarDetails(Calendar.Events.list(calendarId, req).items)
   return JSON.stringify(events)
 }
 
 function testGetEvents() {
-  var req = {
-    singleEvents: false,
-    timeMin: '2019-10-23T10:00:00-07:00',
-    timeMax: '2020-06-30T10:00:00-07:00',
+  var payload = {
+    calendarId: 'm91ia24s7mq0tlm98rbrn31qmk@group.calendar.google.com',
+    req: {
+      singleEvents: false,
+      timeMin: '2019-10-23T10:00:00-07:00',
+      timeMax: '2020-08-30T10:00:00-07:00',
+    },
   }
-  var events = JSON.parse(codeGetEvents(req))
+  var events = JSON.parse(codeGetEvents(payload.req))
   console.log(JSON.stringify(events, null, 2))
 }
 
@@ -117,6 +120,33 @@ function getEventList(data) {
   var events = listUpcomingEvents(selectedDate)
   console.log(events)
   return events
+}
+
+function test_getCalendarList() {
+  const res = getCalendarList()
+  console.log(JSON.stringify(res, null, 2))
+}
+function getCalendarList() {
+  var calendars
+  var pageToken
+  var result = []
+  do {
+    calendars = Calendar.CalendarList.list({
+      maxResults: 100,
+      pageToken: pageToken,
+    })
+    if (calendars.items && calendars.items.length > 0) {
+      for (var i = 0; i < calendars.items.length; i++) {
+        var calendar = calendars.items[i]
+        result.push({ summary: calendar.summary, id: calendar.id })
+        console.log('%s (ID: %s)', calendar.summary, calendar.id)
+      }
+    } else {
+      console.log('No calendars found.')
+    }
+    pageToken = calendars.nextPageToken
+  } while (pageToken)
+  return result
 }
 
 /**
@@ -222,14 +252,15 @@ const comp = (a, b) =>
 function extractCalendarDetails(data) {
   var result = []
 
-  //Remove cancelled events and all day events, sort by date
+  //Remove cancelled events and all day events, events with more than 1 recurrence, sort by date
   var resultFiltered = data
     .filter(
       (item) =>
         item &&
         item.hasOwnProperty('status') &&
         item.status !== 'cancelled' &&
-        !item.start.hasOwnProperty('date')
+        !item.start.hasOwnProperty('date') &&
+        !(item.hasOwnProperty('recurrence') && item.recurrence.length > 1)
     )
     .sort(comp)
     .reverse()
